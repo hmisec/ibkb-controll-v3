@@ -544,6 +544,39 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                             <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
                               8. İBKB Bağlantı Tutarı
                             </label>
+
+                            {/* Quick Percentage / Multiplier Helper */}
+                            <div className="flex items-center gap-1.5 mb-1 bg-purple-50 dark:bg-purple-950/50 p-1 rounded-lg border border-purple-200 dark:border-purple-800">
+                              <span className="text-[10px] font-black text-purple-900 dark:text-purple-300">% Oran:</span>
+                              <input
+                                type="number"
+                                placeholder="Örn: 85"
+                                className="w-16 bg-white dark:bg-slate-900 border border-purple-300 dark:border-purple-700 rounded px-1.5 py-0.5 font-bold text-[10px] text-purple-900 dark:text-purple-200 focus:outline-none"
+                                onChange={(e) => {
+                                  const pct = parseFloat(e.target.value);
+                                  if (!isNaN(pct)) {
+                                    // Extract numeric base from declaration amount or incoming amount
+                                    const rawStr = row.declarationAmountAndCurr || row.incomingAmountAndCurr || '';
+                                    const matches = rawStr.match(/[\d.,]+/);
+                                    if (matches) {
+                                      // Convert Turkish format e.g. 10.000,00 -> 10000
+                                      const cleanNumStr = matches[0].replace(/\./g, '').replace(',', '.');
+                                      const baseAmount = parseFloat(cleanNumStr);
+                                      if (!isNaN(baseAmount)) {
+                                        const calcVal = (baseAmount * pct) / 100;
+                                        const currMatch = rawStr.match(/[A-Z]{3}/) || ['USD'];
+                                        const formattedVal = `${calcVal.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currMatch[0]}`;
+                                        handleUpdateQnbRow(row.id, 'ibkbGbLinkAmount', formattedVal);
+                                      }
+                                    }
+                                  }
+                                }}
+                              />
+                              <span className="text-[9px] font-medium text-purple-700 dark:text-purple-300">
+                                (Yazılan %'ye göre tutarı hesaplar)
+                              </span>
+                            </div>
+
                             <input
                               type="text"
                               value={row.ibkbGbLinkAmount}
@@ -658,24 +691,24 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                 </p>
 
                 {/* QNB Multi-Column Table (Matching Exact Image Structure with Live Inline Editable Table Cells) */}
-                <div className="border-2 border-black overflow-x-auto my-4">
-                  <table className="w-full text-center text-[10px] border-collapse border border-black">
+                <div className="border-2 border-black overflow-x-auto my-4 print:border-black print:overflow-visible print:my-2">
+                  <table className="w-full text-center text-[10px] print:text-[8px] border-collapse border border-black print:table-fixed">
                     <thead>
                       <tr className="bg-slate-100 font-extrabold text-black divide-x divide-black border-b border-black">
-                        <th className="p-1 w-6">#</th>
-                        <th className="p-1.5 font-bold min-w-[140px]">
+                        <th className="p-1 print:p-0.5 print:w-[3%]">#</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[130px] print:min-w-0 print:w-[14%]">
                           Beyanname no<br />
-                          <span className="font-normal text-[8px]">(Gümrük Kapısı kodu dahil -18 haneli kod)</span>
+                          <span className="font-normal text-[8px] print:text-[6.5px]">(18 Haneli Kod)</span>
                         </th>
-                        <th className="p-1.5 font-bold min-w-[90px]">FATURA NO</th>
-                        <th className="p-1.5 font-bold min-w-[85px]">Beyanname tarihi</th>
-                        <th className="p-1.5 font-bold min-w-[110px]">Beyanname Döviz Cinsi ve tutarı</th>
-                        <th className="p-1.5 font-bold min-w-[85px]">Bedelin Hesaba Geçtiği Tarih</th>
-                        <th className="p-1.5 font-bold min-w-[110px]">Gelen Bedelin Döviz Cinsi ve Tutarı</th>
-                        <th className="p-1.5 font-bold min-w-[150px] whitespace-nowrap">Gelen Bedelin Referans Numarası</th>
-                        <th className="p-1.5 font-bold min-w-[110px]">İBKB - GB Bağlantı Tutarı - EUR</th>
-                        <th className="p-1.5 font-bold min-w-[140px]">Döviz Hesap Numarası</th>
-                        <th className="p-1.5 font-bold min-w-[140px]">TL Hesap Numarası</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[80px] print:min-w-0 print:w-[9%]">FATURA NO</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[80px] print:min-w-0 print:w-[8%]">Beyanname tarihi</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[100px] print:min-w-0 print:w-[10%]">Beyanname Döviz Cinsi ve tutarı</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[80px] print:min-w-0 print:w-[8%]">Bedelin Hesaba Geçtiği Tarih</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[100px] print:min-w-0 print:w-[10%]">Gelen Bedelin Döviz Cinsi ve Tutarı</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[130px] print:min-w-0 print:w-[12%] whitespace-nowrap print:whitespace-normal">Gelen Bedelin Referans Numarası</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[100px] print:min-w-0 print:w-[10%]">İBKB - GB Bağlantı Tutarı - EUR</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[110px] print:min-w-0 print:w-[8%]">Döviz Hesap Numarası</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[110px] print:min-w-0 print:w-[8%]">TL Hesap Numarası</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-black font-medium">
