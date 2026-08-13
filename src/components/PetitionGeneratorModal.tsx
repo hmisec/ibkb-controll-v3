@@ -64,9 +64,9 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
             
             {/* Letterhead */}
             <div className="text-center font-black border-b border-slate-200 pb-4 mb-6">
-              <div className="text-base tracking-wide uppercase">{declaration.exporterTitle}</div>
+              <div className="text-base tracking-wide uppercase">{declaration.exporterTitle || 'GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.'}</div>
               <div className="text-xs font-sans text-slate-500 font-bold mt-1 uppercase tracking-wider">
-                Vergi Kimlik No: {declaration.exporterTaxNo} • İhracat Departmanı
+                Vergi Kimlik No: {declaration.exporterTaxNo || '3960817425'} • İhracat Departmanı
               </div>
             </div>
 

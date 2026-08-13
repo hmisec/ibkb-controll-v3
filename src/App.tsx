@@ -10,7 +10,8 @@ import {
 import { 
   initialDeclarations, 
   initialAuditLogs, 
-  initialSession 
+  initialSession,
+  sampleDemoDeclarations
 } from './data/mockData';
 import { 
   calculateDaysLeft, 
@@ -23,6 +24,7 @@ import { StatsCards } from './components/StatsCards';
 import { DeclarationTable } from './components/DeclarationTable';
 import { NotificationPanel } from './components/NotificationPanel';
 import { NewDeclarationModal } from './components/NewDeclarationModal';
+import { EditDeclarationModal } from './components/EditDeclarationModal';
 import { AddIBKBModal } from './components/AddIBKBModal';
 import { ExtensionModal } from './components/ExtensionModal';
 import { TerkinModal } from './components/TerkinModal';
@@ -32,6 +34,8 @@ import { AiAssistantModal } from './components/AiAssistantModal';
 import { AuditLogModal } from './components/AuditLogModal';
 import { SecurityPinModal } from './components/SecurityPinModal';
 import { GoogleSheetsModal } from './components/GoogleSheetsModal';
+import { CloudBackupModal } from './components/CloudBackupModal';
+import { performCloudBackup, getStoredBackupConfig, BackupState } from './lib/cloudBackupService';
 
 import { 
   Search, 
@@ -75,6 +79,7 @@ export default function App() {
   // Modals state
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isNewDecOpen, setIsNewDecOpen] = useState(false);
+  const [isEditDecOpen, setIsEditDecOpen] = useState(false);
   const [isAddIbkbOpen, setIsAddIbkbOpen] = useState(false);
   const [isExtOpen, setIsExtOpen] = useState(false);
   const [isTerkinOpen, setIsTerkinOpen] = useState(false);
@@ -84,6 +89,7 @@ export default function App() {
   const [isAuditLogsOpen, setIsAuditLogsOpen] = useState(false);
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [isSheetsModalOpen, setIsSheetsModalOpen] = useState(false);
+  const [isCloudBackupOpen, setIsCloudBackupOpen] = useState(false);
 
   // Selected Item for Modals
   const [selectedDeclaration, setSelectedDeclaration] = useState<Declaration | null>(null);
@@ -99,6 +105,30 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('export_logs_v1', JSON.stringify(auditLogs));
   }, [auditLogs]);
+
+  // Automatic Cloud Backup Sync after every transaction (debounced)
+  useEffect(() => {
+    const config = getStoredBackupConfig();
+    if (config.autoBackupEnabled) {
+      const timer = setTimeout(() => {
+        performCloudBackup(declarations, auditLogs, session)
+          .catch((err) => console.warn('Otomatik bulut senkronizasyon arka plan uyarısı:', err));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [declarations, auditLogs, session]);
+
+  const handleRestoreFromCloud = (restored: BackupState) => {
+    if (restored.declarations) {
+      setDeclarations(restored.declarations);
+    }
+    if (restored.auditLogs) {
+      setAuditLogs(restored.auditLogs);
+    }
+    if (restored.session) {
+      setSession(restored.session);
+    }
+  };
 
   // Recalculate Days Left & Risk Level dynamically on load
   const updatedDeclarations = useMemo(() => {
@@ -217,6 +247,43 @@ export default function App() {
 
     setDeclarations((prev) => [newDec, ...prev]);
     addAuditLog(newDec.declarationNo, 'Yeni Beyanname Kaydı', `${newDec.amount} ${newDec.currency} tutarında yeni ihracat kaydı oluşturuldu.`);
+  };
+
+  const handleSaveEditDeclaration = (updatedDec: Declaration) => {
+    const days = calculateDaysLeft(updatedDec.closingDate, updatedDec.hasExtension);
+    const risk = computeRiskLevel(days, updatedDec.status);
+
+    setDeclarations((prev) =>
+      prev.map((dec) => {
+        if (dec.id !== updatedDec.id) return dec;
+        return {
+          ...updatedDec,
+          daysLeft: days,
+          riskLevel: risk,
+          updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        };
+      })
+    );
+
+    addAuditLog(updatedDec.declarationNo, 'Beyanname Bilgileri Güncellendi', `${updatedDec.declarationNo} nolu beyannamenin tutar, tarih veya firma detayları güncellendi.`);
+  };
+
+  const handleDeleteDeclaration = (declarationId: string) => {
+    const target = declarations.find((d) => d.id === declarationId);
+    setDeclarations((prev) => prev.filter((d) => d.id !== declarationId));
+    if (target) {
+      addAuditLog(target.declarationNo, 'Beyanname Silindi', `${target.declarationNo} numaralı beyanname sistemden silindi.`);
+    }
+  };
+
+  const handleLoadSampleData = () => {
+    setDeclarations(sampleDemoDeclarations);
+    addAuditLog('SİSTEM', 'Örnek Veri Yükleme', 'Test amacıyla varsayılan örnek beyannameler yüklendi.');
+  };
+
+  const handleClearAllDeclarations = () => {
+    setDeclarations([]);
+    addAuditLog('SİSTEM', 'Tüm Kayıtlar Silindi', 'Kayıtlı tüm ihracat beyannameleri temizlendi.');
   };
 
   const handleSaveIBKB = (declarationId: string, ibkbData: Omit<IBKBRecord, 'id' | 'declarationId' | 'createdAt'>) => {
@@ -350,6 +417,7 @@ export default function App() {
         onOpenNewDeclaration={() => setIsNewDecOpen(true)}
         onOpenAiAssistant={() => setIsAiModalOpen(true)}
         onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
+        onOpenCloudBackup={() => setIsCloudBackupOpen(true)}
         onExportSheets={() => setIsSheetsModalOpen(true)}
         isExportingSheets={isExportingSheets}
       />
@@ -451,6 +519,10 @@ export default function App() {
           onRequestExtension={(dec) => { setSelectedDeclaration(dec); setIsExtOpen(true); }}
           onApplyTerkin={(dec) => { setSelectedDeclaration(dec); setIsTerkinOpen(true); }}
           onGeneratePetition={(dec) => { setSelectedDeclaration(dec); setIsPetitionOpen(true); }}
+          onEditDeclaration={(dec) => { setSelectedDeclaration(dec); setIsEditDecOpen(true); }}
+          onDeleteDeclaration={handleDeleteDeclaration}
+          onLoadSampleData={handleLoadSampleData}
+          onClearAllDeclarations={handleClearAllDeclarations}
         />
 
       </main>
@@ -472,6 +544,14 @@ export default function App() {
         onClose={() => setIsNewDecOpen(false)}
         onSave={handleSaveNewDeclaration}
         onAiFillTrigger={() => { setIsNewDecOpen(false); setIsAiModalOpen(true); }}
+      />
+
+      {/* Edit Declaration Modal */}
+      <EditDeclarationModal
+        isOpen={isEditDecOpen}
+        declaration={selectedDeclaration}
+        onClose={() => setIsEditDecOpen(false)}
+        onSave={handleSaveEditDeclaration}
       />
 
       {/* Add İBKB Modal */}
@@ -507,6 +587,8 @@ export default function App() {
         onRequestExtension={(dec) => { setSelectedDeclaration(dec); setIsExtOpen(true); }}
         onApplyTerkin={(dec) => { setSelectedDeclaration(dec); setIsTerkinOpen(true); }}
         onGeneratePetition={(dec) => { setSelectedDeclaration(dec); setIsPetitionOpen(true); }}
+        onEditDeclaration={(dec) => { setSelectedDeclaration(dec); setIsEditDecOpen(true); }}
+        onDeleteDeclaration={handleDeleteDeclaration}
       />
 
       {/* Petition Generator Modal */}
@@ -545,6 +627,17 @@ export default function App() {
         onClose={() => setIsSheetsModalOpen(false)}
         declarations={updatedDeclarations}
         onImportDeclarations={handleImportDeclarations}
+      />
+
+      {/* Automatic Cloud Backup & Sync Modal */}
+      <CloudBackupModal
+        isOpen={isCloudBackupOpen}
+        onClose={() => setIsCloudBackupOpen(false)}
+        declarations={updatedDeclarations}
+        auditLogs={auditLogs}
+        session={session}
+        onRestoreSuccess={handleRestoreFromCloud}
+        onTriggerAuditLog={(action, desc) => addAuditLog('BULUT SENKRONİZASYON', action, desc)}
       />
 
     </div>

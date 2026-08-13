@@ -1,0 +1,22 @@
+{
+  "entities": {
+    "BackupPayload": {
+      "title": "BackupPayload",
+      "description": "Export & IBKB System Cloud Backup Payload",
+      "type": "object",
+      "properties": {
+        "updatedAt": { "type": "string" },
+        "backupCount": { "type": "number" },
+        "declarations": { "type": "array" },
+        "auditLogs": { "type": "array" },
+        "deviceInfo": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/ibkb_backups/{backupId}": {
+      "schema": "BackupPayload",
+      "description": "Cloud backup records for export declarations and IBKB logs"
+    }
+  }
+}

@@ -20,7 +20,11 @@ import {
   Building2,
   FileCheck,
   ShieldAlert,
-  Printer
+  Printer,
+  Edit3,
+  Trash2,
+  RefreshCw,
+  Trash
 } from 'lucide-react';
 
 interface DeclarationTableProps {
@@ -30,6 +34,10 @@ interface DeclarationTableProps {
   onRequestExtension: (declaration: Declaration) => void;
   onApplyTerkin: (declaration: Declaration) => void;
   onGeneratePetition: (declaration: Declaration) => void;
+  onEditDeclaration?: (declaration: Declaration) => void;
+  onDeleteDeclaration?: (declarationId: string) => void;
+  onLoadSampleData?: () => void;
+  onClearAllDeclarations?: () => void;
 }
 
 export const DeclarationTable: React.FC<DeclarationTableProps> = ({
@@ -39,23 +47,62 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
   onRequestExtension,
   onApplyTerkin,
   onGeneratePetition,
+  onEditDeclaration,
+  onDeleteDeclaration,
+  onLoadSampleData,
+  onClearAllDeclarations,
 }) => {
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+      
+      {/* Table Top Toolbar */}
+      <div className="p-3.5 sm:p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex items-center space-x-2 text-xs font-black text-slate-800 uppercase tracking-wider">
+          <FileText className="w-4 h-4 text-indigo-600" />
+          <span>BEYANNAME LİSTESİ ({declarations.length} Kayıt)</span>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          {onLoadSampleData && declarations.length === 0 && (
+            <button
+              onClick={onLoadSampleData}
+              className="px-3 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-extrabold text-xs flex items-center gap-1.5 border border-indigo-200 transition"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Örnek Veri Yükle</span>
+            </button>
+          )}
+
+          {onClearAllDeclarations && declarations.length > 0 && (
+            <button
+              onClick={() => {
+                if (confirm('Tüm kayıtlı beyannameleri ve bunlara bağlı İBKB belgelerini silmek istediğinize emin misiniz?')) {
+                  onClearAllDeclarations();
+                }
+              }}
+              className="px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 font-extrabold text-xs flex items-center gap-1.5 border border-red-200 transition"
+            >
+              <Trash className="w-3.5 h-3.5" />
+              <span>Tümünü Sil / Temizle</span>
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           
           {/* Table Header */}
           <thead>
-            <tr className="bg-slate-50 text-slate-400 font-black text-[11px] uppercase tracking-widest border-b border-slate-200">
-              <th className="py-4 px-4">Beyanname No</th>
-              <th className="py-4 px-4">İntaç (Kapanma) Tarihi</th>
-              <th className="py-4 px-4">180 Gün Yasal Süre / Kalan Gün</th>
-              <th className="py-4 px-4">Alıcı Firma & Ülke</th>
-              <th className="py-4 px-4 text-right">Toplam Tutar</th>
-              <th className="py-4 px-4 text-right">Açık Bakiye</th>
-              <th className="py-4 px-4 text-center">Durum</th>
-              <th className="py-4 px-4 text-center">İşlemler</th>
+            <tr className="bg-slate-50/80 text-slate-400 font-black text-[11px] uppercase tracking-widest border-b border-slate-200">
+              <th className="py-3.5 px-4">Beyanname No</th>
+              <th className="py-3.5 px-4">İntaç (Kapanma) Tarihi</th>
+              <th className="py-3.5 px-4">180 Gün Yasal Süre / Kalan Gün</th>
+              <th className="py-3.5 px-4">Alıcı Firma & Ülke</th>
+              <th className="py-3.5 px-4 text-right">Toplam Tutar</th>
+              <th className="py-3.5 px-4 text-right">Açık Bakiye</th>
+              <th className="py-3.5 px-4 text-center">Durum</th>
+              <th className="py-3.5 px-4 text-center">İşlemler</th>
             </tr>
           </thead>
 
@@ -64,10 +111,21 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
             {declarations.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-12 text-center text-slate-400">
-                  <div className="flex flex-col items-center justify-center">
-                    <Clock className="w-10 h-10 text-slate-300 mb-2" />
-                    <p className="text-sm font-bold uppercase tracking-wider text-slate-700">Kayıtlı Beyanname Bulunamadı</p>
-                    <p className="text-xs text-slate-400">Filtre kriterlerinize uygun beyanname veya İBKB kaydı yok.</p>
+                  <div className="flex flex-col items-center justify-center space-y-3">
+                    <Clock className="w-10 h-10 text-slate-300" />
+                    <div>
+                      <p className="text-sm font-black uppercase tracking-wider text-slate-700">Kayıtlı Beyanname Bulunamadı</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Sistemde henüz kayıtlı bir ihracat beyannamesi yok veya tümü silindi.</p>
+                    </div>
+                    {onLoadSampleData && (
+                      <button
+                        onClick={onLoadSampleData}
+                        className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 shadow-md shadow-indigo-100"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        <span>2 Adet Test Örnek Veri Yükle</span>
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>
@@ -290,6 +348,32 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                         >
                           <FileText className="w-4 h-4" />
                         </button>
+
+                        {/* Edit Declaration */}
+                        {onEditDeclaration && (
+                          <button
+                            onClick={() => onEditDeclaration(dec)}
+                            className="p-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition shadow-2xs"
+                            title="Beyanname Bilgilerini Düzenle"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                        )}
+
+                        {/* Delete Declaration */}
+                        {onDeleteDeclaration && (
+                          <button
+                            onClick={() => {
+                              if (confirm(`${dec.declarationNo} numaralı beyannameyi silmek istediğinize emin misiniz?`)) {
+                                onDeleteDeclaration(dec.id);
+                              }
+                            }}
+                            className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition shadow-2xs"
+                            title="Beyannameyi Sil"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
 
                       </div>
                     </td>

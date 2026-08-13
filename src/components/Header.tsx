@@ -9,7 +9,8 @@ import {
   Unlock, 
   Plus, 
   Building2,
-  FileText
+  FileText,
+  CloudUpload
 } from 'lucide-react';
 import { UserSession } from '../types';
 
@@ -23,6 +24,7 @@ interface HeaderProps {
   onOpenNewDeclaration: () => void;
   onOpenAiAssistant: () => void;
   onOpenAuditLogs: () => void;
+  onOpenCloudBackup: () => void;
   onExportSheets: () => void;
   isExportingSheets: boolean;
 }
@@ -37,36 +39,37 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenNewDeclaration,
   onOpenAiAssistant,
   onOpenAuditLogs,
+  onOpenCloudBackup,
   onExportSheets,
   isExportingSheets,
 }) => {
   return (
     <header className="bg-white border-b border-slate-200 text-slate-900 sticky top-0 z-30 shadow-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 py-3 min-h-[4.5rem]">
           
           {/* Logo & System Title */}
-          <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-xl bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-100 text-white">
-              <ShieldAlert className="w-6 h-6 text-white" />
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-100 text-white shrink-0">
+              <ShieldAlert className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="text-lg font-black text-slate-900 tracking-tight uppercase">
+                <h1 className="text-base sm:text-lg font-black text-slate-900 tracking-tight uppercase">
                   İBKB <span className="text-indigo-600">&</span> İHRACAT TAKİP
                 </h1>
-                <span className="bg-emerald-50 text-emerald-700 text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full border border-emerald-200">
+                <span className="bg-emerald-50 text-emerald-700 text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 sm:py-1 rounded-full border border-emerald-200">
                   TCMB 2026 MEVZUAT
                 </span>
               </div>
               {session.companyName ? (
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 mt-0.5">
-                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
-                  <span>{session.companyName}</span>
+                <p className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 mt-0.5 truncate max-w-[240px] sm:max-w-none">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <span className="truncate">{session.companyName}</span>
                 </p>
               ) : (
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 mt-0.5">
-                  <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                <p className="text-[11px] sm:text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1 mt-0.5">
+                  <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span>İhracat Takip Sistemi</span>
                 </p>
               )}
@@ -92,6 +95,20 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Action Buttons */}
           <div className="flex items-center space-x-2">
             
+            {/* Cloud Backup Button */}
+            <button
+              onClick={onOpenCloudBackup}
+              className="flex items-center space-x-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-extrabold uppercase tracking-wider px-3 py-2.5 rounded-xl border border-emerald-200 transition"
+              title="Otomatik Bulut Yedekleme & Senkronizasyon"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <CloudUpload className="w-4 h-4 text-emerald-600" />
+              <span className="hidden xl:inline">BULUT YEDEK</span>
+            </button>
+
             {/* AI Document OCR & Consultant Button */}
             <button
               onClick={onOpenAiAssistant}
@@ -129,11 +146,11 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onExportSheets}
               disabled={isExportingSheets}
-              className="p-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition hidden sm:flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider"
+              className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition hidden sm:flex items-center gap-1.5 text-xs font-extrabold uppercase tracking-wider"
               title="Google Sheets / CSV Dışa Aktar"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span>EXPORT</span>
+              <FileSpreadsheet className="w-4 h-4 text-slate-600" />
+              <span className="hidden xl:inline">EXPORT</span>
             </button>
 
             {/* Security Lock Toggle */}
