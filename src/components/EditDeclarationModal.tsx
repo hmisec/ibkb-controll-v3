@@ -32,6 +32,11 @@ export const EditDeclarationModal: React.FC<EditDeclarationModalProps> = ({
   const [amount, setAmount] = useState<number>(declaration.amount);
   const [exchangeRateToTRY, setExchangeRateToTRY] = useState<number>(declaration.exchangeRateToTRY || 33.50);
   const [tcmbMandatorySaleRate, setTcmbMandatorySaleRate] = useState<number>(declaration.tcmbMandatorySaleRate || 30);
+  const [invoiceNo, setInvoiceNo] = useState(declaration.invoiceNo || '');
+  const [dovizAccountNo, setDovizAccountNo] = useState(declaration.dovizAccountNo || 'TR33 0011 1000 0000 9876 5432 10');
+  const [tlAccountNo, setTlAccountNo] = useState(declaration.tlAccountNo || 'TR12 0011 1000 0000 1234 5678 90');
+  const [signerName, setSignerName] = useState(declaration.signerName || 'AHMET YILMAZ');
+  const [signerTitle, setSignerTitle] = useState(declaration.signerTitle || 'İHRACAT OPERASYON MÜDÜRÜ');
   const [notes, setNotes] = useState(declaration.notes || '');
 
   const [errorMsg, setErrorMsg] = useState('');
@@ -52,6 +57,11 @@ export const EditDeclarationModal: React.FC<EditDeclarationModalProps> = ({
       setAmount(declaration.amount);
       setExchangeRateToTRY(declaration.exchangeRateToTRY || 33.50);
       setTcmbMandatorySaleRate(declaration.tcmbMandatorySaleRate || 30);
+      setInvoiceNo(declaration.invoiceNo || 'FT-2026-' + Math.floor(10000 + Math.random() * 90000));
+      setDovizAccountNo(declaration.dovizAccountNo || 'TR33 0011 1000 0000 9876 5432 10');
+      setTlAccountNo(declaration.tlAccountNo || 'TR12 0011 1000 0000 1234 5678 90');
+      setSignerName(declaration.signerName || 'AHMET YILMAZ');
+      setSignerTitle(declaration.signerTitle || 'İHRACAT OPERASYON MÜDÜRÜ');
       setNotes(declaration.notes || '');
       setErrorMsg('');
     }
@@ -107,6 +117,11 @@ export const EditDeclarationModal: React.FC<EditDeclarationModalProps> = ({
       exchangeRateToTRY: Number(exchangeRateToTRY),
       tcmbMandatorySaleRate: Number(tcmbMandatorySaleRate),
       tcmbMandatoryAmount: Number(((numAmount * tcmbMandatorySaleRate) / 100).toFixed(2)),
+      invoiceNo,
+      dovizAccountNo,
+      tlAccountNo,
+      signerName,
+      signerTitle,
       notes,
       updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
     };
@@ -365,6 +380,48 @@ export const EditDeclarationModal: React.FC<EditDeclarationModalProps> = ({
                 <option value="AKREDITIF">Akreditifli Ödeme</option>
                 <option value="KABUL_KREDILI">Kabul Kredili Ödeme</option>
               </select>
+            </div>
+          </div>
+
+          {/* Bank Accounts & Invoice Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-purple-50/70 p-4 rounded-2xl border border-purple-200">
+            <div>
+              <label className="block text-purple-900 font-black text-xs uppercase tracking-wider mb-1">
+                Fatura No
+              </label>
+              <input
+                type="text"
+                value={invoiceNo}
+                onChange={(e) => setInvoiceNo(e.target.value)}
+                placeholder="Örn: FT-2026-10293"
+                className="w-full bg-white border border-purple-200 rounded-xl p-2.5 text-slate-900 font-bold focus:border-purple-600 focus:outline-none text-xs"
+              />
+            </div>
+
+            <div>
+              <label className="block text-purple-900 font-black text-xs uppercase tracking-wider mb-1">
+                Döviz Hesap / IBAN
+              </label>
+              <input
+                type="text"
+                value={dovizAccountNo}
+                onChange={(e) => setDovizAccountNo(e.target.value)}
+                placeholder="TR33 ..."
+                className="w-full bg-white border border-purple-200 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-purple-600 focus:outline-none text-xs"
+              />
+            </div>
+
+            <div>
+              <label className="block text-purple-900 font-black text-xs uppercase tracking-wider mb-1">
+                TL Hesap / IBAN
+              </label>
+              <input
+                type="text"
+                value={tlAccountNo}
+                onChange={(e) => setTlAccountNo(e.target.value)}
+                placeholder="TR12 ..."
+                className="w-full bg-white border border-purple-200 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-purple-600 focus:outline-none text-xs"
+              />
             </div>
           </div>
 

@@ -7,10 +7,14 @@ import {
   Sparkles, 
   Building2, 
   CheckCircle2, 
-  FileText, 
   Plus, 
   Trash2,
-  Table as TableIcon
+  Table as TableIcon,
+  UserCheck,
+  Percent,
+  Sliders,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Declaration } from '../types';
 import { formatCurrency, getDeadlineDateStr } from '../utils/exportCalculations';
@@ -24,7 +28,7 @@ interface PetitionGeneratorModalProps {
 
 export type PetitionType = 'CLOSING' | 'QNB_MULTI' | 'EXTENSION' | 'TERKIN';
 
-interface QnbRow {
+export interface QnbRow {
   id: string;
   declarationNo: string;
   invoiceNo: string;
@@ -54,28 +58,65 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
 
   // QNB Finansbank Specific State
   const [qnbIban, setQnbIban] = useState<string>('TR33 0011 1000 0000 9876 5432 10');
+  const [tlIban, setTlIban] = useState<string>('TR12 0011 1000 0000 1234 5678 90');
   const [tcmbRate, setTcmbRate] = useState<string>('30');
   const [qnbRows, setQnbRows] = useState<QnbRow[]>([]);
 
-  // Initialize QNB rows when declaration or petitionType changes
+  // Signature & Company Customization
+  const [companyTitle, setCompanyTitle] = useState<string>('GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.');
+  const [signerName, setSignerName] = useState<string>('AHMET YILMAZ');
+  const [signerTitle, setSignerTitle] = useState<string>('İHRACAT & DİŞ TİCARET OPERASYON MÜDÜRÜ');
+
+  // Accordion state for expanded row editor
+  const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
+
+  // Initialize QNB rows and values when declaration changes
   useEffect(() => {
     if (declaration) {
+      if (declaration.exporterTitle) {
+        setCompanyTitle(declaration.exporterTitle);
+      }
+      if (declaration.signerName) {
+        setSignerName(declaration.signerName);
+      }
+      if (declaration.signerTitle) {
+        setSignerTitle(declaration.signerTitle);
+      }
+      if (declaration.dovizAccountNo) {
+        setQnbIban(declaration.dovizAccountNo);
+      }
+      if (declaration.tlAccountNo) {
+        setTlIban(declaration.tlAccountNo);
+      }
+
       const initialRow: QnbRow = {
         id: 'qnb-row-1',
         declarationNo: declaration.declarationNo || '',
-        invoiceNo: 'FT-2026-' + Math.floor(10000 + Math.random() * 90000),
-        declarationDate: declaration.closingDate || '',
-        declarationAmountAndCurr: `${declaration.remainingAmount.toLocaleString('tr-TR')} ${declaration.currency}`,
-        creditDate: declaration.closingDate || '',
-        incomingAmountAndCurr: `${declaration.remainingAmount.toLocaleString('tr-TR')} ${declaration.currency}`,
+        invoiceNo: declaration.invoiceNo || ('FT-2026-' + Math.floor(10000 + Math.random() * 90000)),
+        declarationDate: declaration.closingDate || new Date().toISOString().substring(0, 10),
+        declarationAmountAndCurr: `${declaration.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${declaration.currency}`,
+        creditDate: declaration.closingDate || new Date().toISOString().substring(0, 10),
+        incomingAmountAndCurr: `${declaration.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${declaration.currency}`,
         referenceNo: 'FT' + Math.floor(1000000000 + Math.random() * 9000000000),
-        ibkbGbLinkAmount: `${declaration.remainingAmount.toLocaleString('tr-TR')} ${declaration.currency}`,
-        dovizAccountNo: 'TR33 0011 1000 0000 9876 5432 10',
-        tlAccountNo: 'TR12 0011 1000 0000 1234 5678 90',
+        ibkbGbLinkAmount: `${declaration.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${declaration.currency}`,
+        dovizAccountNo: declaration.dovizAccountNo || 'TR33 0011 1000 0000 9876 5432 10',
+        tlAccountNo: declaration.tlAccountNo || 'TR12 0011 1000 0000 1234 5678 90',
       };
       setQnbRows([initialRow]);
+      setExpandedRowId('qnb-row-1');
     }
   }, [declaration]);
+
+  // Update rows when global IBANs change
+  const handleGlobalDovizIbanChange = (newVal: string) => {
+    setQnbIban(newVal);
+    setQnbRows(prev => prev.map(r => ({ ...r, dovizAccountNo: newVal })));
+  };
+
+  const handleGlobalTlIbanChange = (newVal: string) => {
+    setTlIban(newVal);
+    setQnbRows(prev => prev.map(r => ({ ...r, tlAccountNo: newVal })));
+  };
 
   if (!isOpen || !declaration) return null;
 
@@ -87,8 +128,9 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
   };
 
   const handleAddQnbRow = () => {
+    const newId = 'qnb-row-' + Date.now();
     const newRow: QnbRow = {
-      id: 'qnb-row-' + Date.now(),
+      id: newId,
       declarationNo: '2634' + Math.floor(10000000000000 + Math.random() * 90000000000000),
       invoiceNo: 'FT-2026-' + Math.floor(10000 + Math.random() * 90000),
       declarationDate: new Date().toISOString().substring(0, 10),
@@ -98,9 +140,10 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
       referenceNo: 'FT' + Math.floor(1000000000 + Math.random() * 9000000000),
       ibkbGbLinkAmount: '50.000,00 EUR',
       dovizAccountNo: qnbIban,
-      tlAccountNo: 'TR12 0011 1000 0000 1234 5678 90',
+      tlAccountNo: tlIban,
     };
     setQnbRows((prev) => [...prev, newRow]);
+    setExpandedRowId(newId);
   };
 
   const handleRemoveQnbRow = (id: string) => {
@@ -165,8 +208,8 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
           </div>
         </div>
 
-        {/* Options / Tab Selector */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 space-y-3">
+        {/* Options / Tab Selector & Parameter Form */}
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 space-y-4 max-h-[45vh] overflow-y-auto">
           
           {/* Petition Type Radio / Button Tabs */}
           <div>
@@ -230,26 +273,75 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
             </div>
           </div>
 
+          {/* General Customization Panel: Signer & Company Details */}
+          <div className="p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-3">
+            <div className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase flex items-center gap-1.5">
+              <UserCheck className="w-4 h-4 text-indigo-600" />
+              <span>KAŞE / İMZA VE FİRMA BİLGİLERİ (SERBEST DÜZENLEME)</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <div>
+                <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1">
+                  Firma Unvanı (Kaşe Başlığı)
+                </label>
+                <input
+                  type="text"
+                  value={companyTitle}
+                  onChange={(e) => setCompanyTitle(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 font-extrabold text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1">
+                  İmza Sahibi Adı Soyadı
+                </label>
+                <input
+                  type="text"
+                  value={signerName}
+                  onChange={(e) => setSignerName(e.target.value)}
+                  placeholder="Örn: AHMET YILMAZ"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 font-extrabold text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1">
+                  İmza Sahibi Unvanı
+                </label>
+                <input
+                  type="text"
+                  value={signerTitle}
+                  onChange={(e) => setSignerTitle(e.target.value)}
+                  placeholder="Örn: İHRACAT MÜDÜRÜ / ŞİRKET YETKİLİSİ"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 font-extrabold text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* QNB Finansbank Multi-Row Controls */}
           {petitionType === 'QNB_MULTI' && (
             <div className="p-3 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 rounded-2xl space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="text-xs font-black text-purple-900 dark:text-purple-200 uppercase flex items-center gap-1.5">
                   <Building2 className="w-4 h-4 text-purple-600" />
-                  <span>QNB FİNANSBANK A.Ş. İHRAÇAT ÇOKLU İBKB TALİMATI PARAMETRELERİ</span>
+                  <span>QNB FİNANSBANK İHRAÇAT ÇOKLU İBKB TALİMATI PARAMETRELERİ</span>
                 </div>
                 
                 <button
                   type="button"
                   onClick={handleAddQnbRow}
-                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[11px] uppercase rounded-xl transition flex items-center gap-1"
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[11px] uppercase rounded-xl transition flex items-center gap-1 shadow-xs"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Satır Eklesene ({qnbRows.length})</span>
+                  <span>Beyanname Satırı Ekle ({qnbRows.length})</span>
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {/* Global Accounts & Percent Rate Controls */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div>
                   <label className="block text-[10px] font-extrabold text-purple-800 dark:text-purple-300 uppercase mb-1">
                     Gelen Bedel Döviz IBAN Hesabı
@@ -257,84 +349,239 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                   <input
                     type="text"
                     value={qnbIban}
-                    onChange={(e) => setQnbIban(e.target.value)}
+                    onChange={(e) => handleGlobalDovizIbanChange(e.target.value)}
                     className="w-full bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl px-3 py-1.5 font-mono font-bold text-slate-900 dark:text-white"
                   />
                 </div>
 
                 <div>
                   <label className="block text-[10px] font-extrabold text-purple-800 dark:text-purple-300 uppercase mb-1">
-                    TCMB Döviz Satış Oranı (%)
+                    TL Hesap Numarası / IBAN
                   </label>
-                  <select
-                    value={tcmbRate}
-                    onChange={(e) => setTcmbRate(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl px-3 py-1.5 font-bold text-slate-900 dark:text-white"
-                  >
-                    <option value="30">%30 (TCMB Zorunlu Döviz Satış Oranı)</option>
-                    <option value="40">%40 (Önceki Genelge Oranı)</option>
-                    <option value="0">%0 (Muafiyetli Sektör / Hizmet İhracatı)</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={tlIban}
+                    onChange={(e) => handleGlobalTlIbanChange(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl px-3 py-1.5 font-mono font-bold text-slate-900 dark:text-white"
+                  />
                 </div>
-              </div>
 
-              {/* Editable Table Rows Inputs */}
-              <div className="max-h-40 overflow-y-auto space-y-2 pr-1 pt-1">
-                {qnbRows.map((row, idx) => (
-                  <div key={row.id} className="p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl grid grid-cols-1 sm:grid-cols-5 gap-2 items-center text-[11px]">
-                    <div className="font-extrabold text-slate-500">
-                      #{idx + 1} Beyanname No:
-                      <input
-                        type="text"
-                        value={row.declarationNo}
-                        onChange={(e) => handleUpdateQnbRow(row.id, 'declarationNo', e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-mono font-bold text-slate-900 dark:text-white mt-0.5"
-                      />
-                    </div>
-
-                    <div>
-                      <span className="font-bold text-slate-500">Fatura No:</span>
-                      <input
-                        type="text"
-                        value={row.invoiceNo}
-                        onChange={(e) => handleUpdateQnbRow(row.id, 'invoiceNo', e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-slate-900 dark:text-white mt-0.5"
-                      />
-                    </div>
-
-                    <div>
-                      <span className="font-bold text-slate-500">Gelen Bedel & Tutarı:</span>
-                      <input
-                        type="text"
-                        value={row.incomingAmountAndCurr}
-                        onChange={(e) => handleUpdateQnbRow(row.id, 'incomingAmountAndCurr', e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-slate-900 dark:text-white mt-0.5"
-                      />
-                    </div>
-
-                    <div>
-                      <span className="font-bold text-slate-500">Gelen Bedel Ref No:</span>
-                      <input
-                        type="text"
-                        value={row.referenceNo}
-                        onChange={(e) => handleUpdateQnbRow(row.id, 'referenceNo', e.target.value)}
-                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-mono font-bold text-slate-900 dark:text-white mt-0.5"
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-1 justify-end pt-3">
+                <div>
+                  <label className="block text-[10px] font-extrabold text-purple-800 dark:text-purple-300 uppercase mb-1 flex items-center gap-1">
+                    <Percent className="w-3 h-3 text-purple-600" />
+                    <span>TCMB Döviz Satış Oranı (%) Serbest Giriş</span>
+                  </label>
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="text"
+                      value={tcmbRate}
+                      onChange={(e) => setTcmbRate(e.target.value)}
+                      placeholder="30"
+                      className="w-20 bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl px-3 py-1.5 font-mono font-black text-purple-700 dark:text-purple-300 text-center"
+                    />
+                    <div className="flex items-center gap-1 text-[10px]">
                       <button
                         type="button"
-                        onClick={() => handleRemoveQnbRow(row.id)}
-                        disabled={qnbRows.length <= 1}
-                        className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition disabled:opacity-30"
-                        title="Satırı Sil"
+                        onClick={() => setTcmbRate('30')}
+                        className={`px-2 py-1 rounded-lg font-bold border transition ${tcmbRate === '30' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'}`}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        %30
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTcmbRate('40')}
+                        className={`px-2 py-1 rounded-lg font-bold border transition ${tcmbRate === '40' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'}`}
+                      >
+                        %40
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTcmbRate('0')}
+                        className={`px-2 py-1 rounded-lg font-bold border transition ${tcmbRate === '0' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800'}`}
+                      >
+                        %0
                       </button>
                     </div>
                   </div>
-                ))}
+                </div>
+              </div>
+
+              {/* Editable Table Rows Details (Expanded Cards for 100% full column editing) */}
+              <div className="space-y-2 pt-1">
+                <div className="text-[10px] font-extrabold uppercase text-purple-800 dark:text-purple-300 flex items-center justify-between">
+                  <span>Sıra Bazlı Tüm Kolon Değerlerini Düzenleyin (10/10 Sütun):</span>
+                  <span className="text-slate-400 font-normal">Aşağıdaki alanları değiştirdiğinizde tablo anında güncellenir. Ayrıca sayfa önizlemesindeki tablodan da doğrudan tıklayıp yazabilirsiniz.</span>
+                </div>
+
+                {qnbRows.map((row, idx) => {
+                  const isExpanded = expandedRowId === row.id;
+
+                  return (
+                    <div key={row.id} className="bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800/80 rounded-2xl overflow-hidden transition shadow-2xs">
+                      
+                      {/* Row Accordion Header */}
+                      <div 
+                        onClick={() => setExpandedRowId(isExpanded ? null : row.id)}
+                        className="p-2.5 bg-slate-50 dark:bg-slate-800/80 cursor-pointer flex items-center justify-between hover:bg-purple-50/50 dark:hover:bg-purple-900/30 transition text-xs"
+                      >
+                        <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
+                          <span className="w-5 h-5 rounded-full bg-purple-600 text-white text-[10px] font-black flex items-center justify-center">
+                            {idx + 1}
+                          </span>
+                          <span className="font-mono">{row.declarationNo || 'Beyanname No Boş'}</span>
+                          <span className="text-slate-400 font-normal">|</span>
+                          <span className="text-slate-600 dark:text-slate-300">Fatura: {row.invoiceNo}</span>
+                          <span className="text-slate-400 font-normal">|</span>
+                          <span className="text-emerald-600 font-black">{row.incomingAmountAndCurr}</span>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveQnbRow(row.id);
+                            }}
+                            disabled={qnbRows.length <= 1}
+                            className="p-1 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-lg transition disabled:opacity-20"
+                            title="Satırı Sil"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                          {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />}
+                        </div>
+                      </div>
+
+                      {/* Row Expanded Inputs Grid (All 10 columns) */}
+                      {isExpanded && (
+                        <div className="p-3 grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 text-[11px] bg-white dark:bg-slate-900 border-t border-purple-100 dark:border-purple-900/50">
+                          
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
+                              1. Beyanname No (18 Hane)
+                            </label>
+                            <input
+                              type="text"
+                              value={row.declarationNo}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'declarationNo', e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-mono font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
+                              2. Fatura No
+                            </label>
+                            <input
+                              type="text"
+                              value={row.invoiceNo}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'invoiceNo', e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
+                              3. Beyanname Tarihi
+                            </label>
+                            <input
+                              type="text"
+                              value={row.declarationDate}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'declarationDate', e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
+                              4. GB Döviz & Tutar
+                            </label>
+                            <input
+                              type="text"
+                              value={row.declarationAmountAndCurr}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'declarationAmountAndCurr', e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
+                              5. Bedel Geçiş Tarihi
+                            </label>
+                            <input
+                              type="text"
+                              value={row.creditDate}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'creditDate', e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
+                              6. Gelen Bedel & Tutar
+                            </label>
+                            <input
+                              type="text"
+                              value={row.incomingAmountAndCurr}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'incomingAmountAndCurr', e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
+                              7. Gelen Bedel Referans No
+                            </label>
+                            <input
+                              type="text"
+                              value={row.referenceNo}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'referenceNo', e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-mono font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
+                              8. İBKB Bağlantı Tutarı
+                            </label>
+                            <input
+                              type="text"
+                              value={row.ibkbGbLinkAmount}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'ibkbGbLinkAmount', e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
+                              9. Döviz Hesap / IBAN
+                            </label>
+                            <input
+                              type="text"
+                              value={row.dovizAccountNo}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'dovizAccountNo', e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-mono font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-0.5">
+                              10. TL Hesap / IBAN
+                            </label>
+                            <input
+                              type="text"
+                              value={row.tlAccountNo}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'tlAccountNo', e.target.value)}
+                              className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-mono font-bold text-slate-900 dark:text-white"
+                            />
+                          </div>
+
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                })}
               </div>
 
             </div>
@@ -402,49 +649,131 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
 
                 {/* Main Legal Paragraph 1 */}
                 <p className="text-justify font-medium leading-relaxed">
-                  Nezdinizdeki <strong>[{qnbIban}]</strong> nolu hesabımıza ihracat bedeli olarak gelen ve aşağıda detayı bulunan işlemlerin gerçekleştirilerek İBKB düzenlenmesini rica ederiz.
+                  Nezdinizdeki <span className="font-bold font-mono">[{qnbIban}]</span> nolu hesabımıza ihracat bedeli olarak gelen ve aşağıda detayı bulunan işlemlerin gerçekleştirilerek İBKB düzenlenmesini rica ederiz.
                 </p>
 
                 {/* Main Legal Paragraph 2 (TCMB Döviz Satış Kararı) */}
                 <p className="text-justify font-normal leading-relaxed text-[11px]">
-                  İhracat Genelgesinin Ek 1 inci Maddesinde tarif edilen döviz cinsleri (USD-EUR-GBP) için düzenlenecek İBKB tutarlarının %<strong>{tcmbRate}</strong> 'lik kısmının aşağıda belirtilen döviz tevdiat hesabımıza borç geçilerek döviz satışı yapılmak üzere T.C. Merkez Bankasına satılmasını ve işbu talimatımızın Bankanıza ulaştığı saatten bağımsız “Türkiye Cumhuriyet Merkez Bankasına Yapılacak Döviz Satışına İlişkin Uygulama Talimatı“ hükümleri çerçevesinde İBKB düzenlendiği anda geçerli olacak işlem kuru (Merkez Bankası tarafından saat 10:00, 11:00, 12:00, 13:00, 14:00 ve 15:00'de ilan edilen ve İBKB düzenlendiği saat itibarıyla en son açıklanmış olan döviz alış kuru) üzerinden hesaplanacak TL karşılığının aşağıda belirttiğimiz TL hesabımıza veya Bankanız nezdindeki herhangi bir TL hesaba alacak geçilmesini kabul ve beyan ederiz.
+                  İhracat Genelgesinin Ek 1 inci Maddesinde tarif edilen döviz cinsleri (USD-EUR-GBP) için düzenlenecek İBKB tutarlarının %<strong className="font-mono">{tcmbRate}</strong> 'lik kısmının aşağıda belirtilen döviz tevdiat hesabımıza borç geçilerek döviz satışı yapılmak üzere T.C. Merkez Bankasına satılmasını ve işbu talimatımızın Bankanıza ulaştığı saatten bağımsız “Türkiye Cumhuriyet Merkez Bankasına Yapılacak Döviz Satışına İlişkin Uygulama Talimatı“ hükümleri çerçevesinde İBKB düzenlendiği anda geçerli olacak işlem kuru (Merkez Bankası tarafından saat 10:00, 11:00, 12:00, 13:00, 14:00 ve 15:00'de ilan edilen ve İBKB düzenlendiği saat itibarıyla en son açıklanmış olan döviz alış kuru) üzerinden hesaplanacak TL karşılığının aşağıda belirttiğimiz TL hesabımıza veya Bankanız nezdindeki herhangi bir TL hesaba alacak geçilmesini kabul ve beyan ederiz.
                 </p>
 
-                {/* QNB Multi-Column Table (Matching Exact Image Structure) */}
+                {/* QNB Multi-Column Table (Matching Exact Image Structure with Live Inline Editable Table Cells) */}
                 <div className="border-2 border-black overflow-x-auto my-4">
                   <table className="w-full text-center text-[10px] border-collapse border border-black">
                     <thead>
                       <tr className="bg-slate-100 font-extrabold text-black divide-x divide-black border-b border-black">
-                        <th className="p-1.5 w-6">#</th>
-                        <th className="p-1.5 font-bold">
+                        <th className="p-1 w-6">#</th>
+                        <th className="p-1 font-bold">
                           Beyanname no<br />
-                          <span className="font-normal text-[9px]">(Gümrük Kapısı kodu dahil -18 haneli kod)</span>
+                          <span className="font-normal text-[8px]">(Gümrük Kapısı kodu dahil -18 haneli kod)</span>
                         </th>
-                        <th className="p-1.5 font-bold">FATURA NO</th>
-                        <th className="p-1.5 font-bold">Beyanname tarihi</th>
-                        <th className="p-1.5 font-bold">Beyanname Döviz Cinsi ve tutarı</th>
-                        <th className="p-1.5 font-bold">Bedelin Hesaba Geçtiği Tarih</th>
-                        <th className="p-1.5 font-bold">Gelen Bedelin Döviz Cinsi ve Tutarı</th>
-                        <th className="p-1.5 font-bold">Gelen Bedelin Referans Numarası</th>
-                        <th className="p-1.5 font-bold">İBKB - GB Bağlantı Tutarı - EUR</th>
-                        <th className="p-1.5 font-bold">Döviz Hesap Numarası</th>
-                        <th className="p-1.5 font-bold">TL Hesap Numarası</th>
+                        <th className="p-1 font-bold">FATURA NO</th>
+                        <th className="p-1 font-bold">Beyanname tarihi</th>
+                        <th className="p-1 font-bold">Beyanname Döviz Cinsi ve tutarı</th>
+                        <th className="p-1 font-bold">Bedelin Hesaba Geçtiği Tarih</th>
+                        <th className="p-1 font-bold">Gelen Bedelin Döviz Cinsi ve Tutarı</th>
+                        <th className="p-1 font-bold">Gelen Bedelin Referans Numarası</th>
+                        <th className="p-1 font-bold">İBKB - GB Bağlantı Tutarı - EUR</th>
+                        <th className="p-1 font-bold">Döviz Hesap Numarası</th>
+                        <th className="p-1 font-bold">TL Hesap Numarası</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-black font-medium">
                       {qnbRows.map((row, idx) => (
-                        <tr key={row.id} className="divide-x divide-black hover:bg-slate-50">
-                          <td className="p-1.5 font-bold">{idx + 1}</td>
-                          <td className="p-1.5 font-mono font-bold">{row.declarationNo}</td>
-                          <td className="p-1.5">{row.invoiceNo}</td>
-                          <td className="p-1.5">{row.declarationDate}</td>
-                          <td className="p-1.5 font-bold">{row.declarationAmountAndCurr}</td>
-                          <td className="p-1.5">{row.creditDate}</td>
-                          <td className="p-1.5 font-bold">{row.incomingAmountAndCurr}</td>
-                          <td className="p-1.5 font-mono">{row.referenceNo}</td>
-                          <td className="p-1.5 font-bold">{row.ibkbGbLinkAmount}</td>
-                          <td className="p-1.5 font-mono text-[9px]">{row.dovizAccountNo}</td>
-                          <td className="p-1.5 font-mono text-[9px]">{row.tlAccountNo}</td>
+                        <tr key={row.id} className="divide-x divide-black hover:bg-slate-50 transition">
+                          <td className="p-1 font-bold">{idx + 1}</td>
+                          
+                          {/* Inline Editable Cells */}
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={row.declarationNo}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'declarationNo', e.target.value)}
+                              className="w-full bg-transparent text-center font-mono font-bold outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                            />
+                          </td>
+
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={row.invoiceNo}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'invoiceNo', e.target.value)}
+                              className="w-full bg-transparent text-center font-bold outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                            />
+                          </td>
+
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={row.declarationDate}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'declarationDate', e.target.value)}
+                              className="w-full bg-transparent text-center outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                            />
+                          </td>
+
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={row.declarationAmountAndCurr}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'declarationAmountAndCurr', e.target.value)}
+                              className="w-full bg-transparent text-center font-bold outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                            />
+                          </td>
+
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={row.creditDate}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'creditDate', e.target.value)}
+                              className="w-full bg-transparent text-center outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                            />
+                          </td>
+
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={row.incomingAmountAndCurr}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'incomingAmountAndCurr', e.target.value)}
+                              className="w-full bg-transparent text-center font-bold outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                            />
+                          </td>
+
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={row.referenceNo}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'referenceNo', e.target.value)}
+                              className="w-full bg-transparent text-center font-mono outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                            />
+                          </td>
+
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={row.ibkbGbLinkAmount}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'ibkbGbLinkAmount', e.target.value)}
+                              className="w-full bg-transparent text-center font-bold outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                            />
+                          </td>
+
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={row.dovizAccountNo}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'dovizAccountNo', e.target.value)}
+                              className="w-full bg-transparent text-center font-mono text-[8px] outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                            />
+                          </td>
+
+                          <td className="p-1">
+                            <input
+                              type="text"
+                              value={row.tlAccountNo}
+                              onChange={(e) => handleUpdateQnbRow(row.id, 'tlAccountNo', e.target.value)}
+                              className="w-full bg-transparent text-center font-mono text-[8px] outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                            />
+                          </td>
+
                         </tr>
                       ))}
                     </tbody>
@@ -456,13 +785,13 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                   <div>Saygılarımızla,</div>
                   <div className="pt-8 flex justify-between items-start">
                     <div>
-                      <div>KAŞE İMZA</div>
-                      <div className="text-[10px] text-slate-600">{declaration.exporterTitle || 'GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.'}</div>
+                      <div className="font-black text-sm uppercase">KAŞE / İMZA</div>
+                      <div className="text-xs font-bold text-slate-800 uppercase mt-0.5">{companyTitle}</div>
                     </div>
 
                     <div className="text-right">
-                      <div>MÜDÜR</div>
-                      <div className="text-[10px] text-slate-600">İhrakat & Dış Ticaret Operasyonları</div>
+                      <div className="font-black text-sm uppercase">{signerName}</div>
+                      <div className="text-xs font-bold text-slate-600 uppercase mt-0.5">{signerTitle}</div>
                     </div>
                   </div>
                 </div>
@@ -473,7 +802,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
               <div>
                 {/* Letterhead */}
                 <div className="text-center font-black border-b border-slate-300 pb-4 mb-6">
-                  <div className="text-base tracking-wide uppercase font-sans font-black">{declaration.exporterTitle || 'GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.'}</div>
+                  <div className="text-base tracking-wide uppercase font-sans font-black">{companyTitle}</div>
                   <div className="text-xs font-sans text-slate-600 font-bold mt-1 uppercase tracking-wider">
                     Vergi Kimlik No: {declaration.exporterTaxNo || '3960817425'} • İhracat & Dış Ticaret Operasyon Departmanı
                   </div>
@@ -569,10 +898,10 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                   {petitionType === 'EXTENSION' && (
                     <>
                       <p>
-                        Yurtdışı alıcı firmanın finansal operasyonel takvimi ve uluslararası banka transfer süreçlerindeki dönemsel gecikmeler (haklı sebep) nedeniyle ihracat bedelinin tahsilat ve İBKB kapama işlemleri devam etmektedir.
+                        Yurtdışı alıcı firmanın finansal operational takvimi ve uluslararası banka transfer süreçlerindeki dönemsel gecikmeler (haklı sebep) nedeniyle ihracat bedelinin tahsilat ve İBKB kapama işlemleri devam etmektedir.
                       </p>
                       <p>
-                        TCMB İhracat Genelgesi'nin 8. maddesi uyarınca, beyanname kapanış süremizin dolmasına mahal vermeden tarafımıza <strong>+90 (doksan) gün ek süre</strong> tanınmasını ve bankanız / TCMB sistemindeki ek süre kayıtlarının güncellenmesini saygılarımızla arz ve talep ederiz.
+                        TCMB İhracat Genelgesi'nin 8. maddesi uyarınca, beyanname kapanış süremizin dolmesine mahal vermeden tarafımıza <strong>+90 (doksan) gün ek süre</strong> tanınmasını ve bankanız / TCMB sistemindeki ek süre kayıtlarının güncellenmesini saygılarımızla arz ve talep ederiz.
                       </p>
                     </>
                   )}
@@ -604,9 +933,10 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                   </div>
 
                   <div className="text-center font-black">
-                    <div>{declaration.exporterTitle || 'GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.'}</div>
-                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-1">Şirket Yetkilisi İmza / Kaşe</div>
-                    <div className="mt-12 border-b-2 border-slate-400 w-40 mx-auto"></div>
+                    <div className="uppercase font-extrabold">{companyTitle}</div>
+                    <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mt-3">{signerName}</div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">{signerTitle}</div>
+                    <div className="mt-8 border-b-2 border-slate-400 w-44 mx-auto"></div>
                   </div>
                 </div>
 

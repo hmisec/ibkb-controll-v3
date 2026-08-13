@@ -54,6 +54,8 @@ import {
 
 export default function App() {
   // Persistence state
+  const [readNotifIds, setReadNotifIds] = useState<string[]>([]);
+
   const [declarations, setDeclarations] = useState<Declaration[]>(() => {
     const saved = localStorage.getItem('export_declarations_v1');
     if (saved) {
@@ -190,8 +192,12 @@ export default function App() {
 
   // Evaluate Zero-Error Audit Notifications
   const notifications: AuditNotification[] = useMemo(() => {
-    return evaluateZeroErrorRules(updatedDeclarations);
-  }, [updatedDeclarations]);
+    const list = evaluateZeroErrorRules(updatedDeclarations);
+    return list.map(n => ({
+      ...n,
+      isRead: readNotifIds.includes(n.id)
+    }));
+  }, [updatedDeclarations, readNotifIds]);
 
   // Critical Declarations in final 15-day risk zone
   const criticalDeclarations = useMemo(() => {
@@ -589,7 +595,7 @@ export default function App() {
         isOpen={isNotifOpen}
         onClose={() => setIsNotifOpen(false)}
         notifications={notifications}
-        onMarkAllAsRead={() => {}}
+        onMarkAllAsRead={() => setReadNotifIds(notifications.map(n => n.id))}
         onQuickAction={handleNotifQuickAction}
       />
 

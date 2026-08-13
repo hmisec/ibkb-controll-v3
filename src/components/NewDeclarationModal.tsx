@@ -32,6 +32,11 @@ export const NewDeclarationModal: React.FC<NewDeclarationModalProps> = ({
   const [amount, setAmount] = useState<number>(50000);
   const [exchangeRateToTRY, setExchangeRateToTRY] = useState<number>(33.50);
   const [tcmbMandatorySaleRate, setTcmbMandatorySaleRate] = useState<number>(30);
+  const [invoiceNo, setInvoiceNo] = useState('FT-2026-' + Math.floor(10000 + Math.random() * 90000));
+  const [dovizAccountNo, setDovizAccountNo] = useState('TR33 0011 1000 0000 9876 5432 10');
+  const [tlAccountNo, setTlAccountNo] = useState('TR12 0011 1000 0000 1234 5678 90');
+  const [signerName, setSignerName] = useState('AHMET YILMAZ');
+  const [signerTitle, setSignerTitle] = useState('İHRACAT OPERASYON MÜDÜRÜ');
   const [notes, setNotes] = useState('');
 
   const [errorMsg, setErrorMsg] = useState('');
@@ -78,6 +83,11 @@ export const NewDeclarationModal: React.FC<NewDeclarationModalProps> = ({
       tcmbMandatorySaleRate: Number(tcmbMandatorySaleRate),
       tcmbMandatoryAmount: (amount * tcmbMandatorySaleRate) / 100,
       tcmbSoldAmount: 0,
+      invoiceNo,
+      dovizAccountNo,
+      tlAccountNo,
+      signerName,
+      signerTitle,
       status: 'ACTIVE',
       notes,
     });
@@ -339,6 +349,48 @@ export const NewDeclarationModal: React.FC<NewDeclarationModalProps> = ({
                 <option value={40}>%40 Zorunlu Satış</option>
                 <option value={0}>%0 Muaf (Hizmet/İstisna)</option>
               </select>
+            </div>
+          </div>
+
+          {/* Bank Accounts & Invoice Details */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-purple-50/70 p-4 rounded-2xl border border-purple-200">
+            <div>
+              <label className="block text-purple-900 font-black text-xs uppercase tracking-wider mb-1">
+                Fatura No
+              </label>
+              <input
+                type="text"
+                value={invoiceNo}
+                onChange={(e) => setInvoiceNo(e.target.value)}
+                placeholder="Örn: FT-2026-10293"
+                className="w-full bg-white border border-purple-200 rounded-xl p-2.5 text-slate-900 font-bold focus:border-purple-600 focus:outline-none text-xs"
+              />
+            </div>
+
+            <div>
+              <label className="block text-purple-900 font-black text-xs uppercase tracking-wider mb-1">
+                Döviz Hesap / IBAN
+              </label>
+              <input
+                type="text"
+                value={dovizAccountNo}
+                onChange={(e) => setDovizAccountNo(e.target.value)}
+                placeholder="TR33 ..."
+                className="w-full bg-white border border-purple-200 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-purple-600 focus:outline-none text-xs"
+              />
+            </div>
+
+            <div>
+              <label className="block text-purple-900 font-black text-xs uppercase tracking-wider mb-1">
+                TL Hesap / IBAN
+              </label>
+              <input
+                type="text"
+                value={tlAccountNo}
+                onChange={(e) => setTlAccountNo(e.target.value)}
+                placeholder="TR12 ..."
+                className="w-full bg-white border border-purple-200 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-purple-600 focus:outline-none text-xs"
+              />
             </div>
           </div>
 

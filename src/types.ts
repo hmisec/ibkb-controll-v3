@@ -67,6 +67,11 @@ export interface Declaration {
   tcmbMandatorySaleRate: number; // %30, %40 vb.
   tcmbMandatoryAmount: number; // Zaten TL'ye çevrilmesi gereken tutar
   tcmbSoldAmount: number; // Gerçekleşen TCMB Satış Tutarı
+  invoiceNo?: string; // Fatura No (Örn: FT-2026-10293)
+  dovizAccountNo?: string; // Gelen Bedel Döviz IBAN
+  tlAccountNo?: string; // TL IBAN
+  signerName?: string; // Yetkili İmza Ad Soyad
+  signerTitle?: string; // Yetkili Unvanı
   status: DeclarationStatus;
   riskLevel: RiskLevel;
   daysLeft: number;
