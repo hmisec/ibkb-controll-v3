@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bell, 
   X, 
@@ -9,9 +9,11 @@ import {
   ArrowRight,
   ShieldAlert,
   Filter,
-  CheckCheck
+  CheckCheck,
+  BellRing
 } from 'lucide-react';
 import { AuditNotification } from '../types';
+import { getBrowserNotificationPermission, requestBrowserNotificationPermission } from '../utils/browserNotification';
 
 interface NotificationPanelProps {
   isOpen: boolean;
@@ -29,6 +31,18 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
   onQuickAction,
 }) => {
   const [filterCategory, setFilterCategory] = useState<string>('ALL');
+  const [browserNotifStatus, setBrowserNotifStatus] = useState<string>('default');
+
+  useEffect(() => {
+    if (isOpen) {
+      setBrowserNotifStatus(getBrowserNotificationPermission());
+    }
+  }, [isOpen]);
+
+  const handleRequestPermission = async () => {
+    const perm = await requestBrowserNotificationPermission();
+    setBrowserNotifStatus(perm);
+  };
 
   if (!isOpen) return null;
 
@@ -82,6 +96,32 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
               <X className="w-5 h-5" />
             </button>
           </div>
+        </div>
+
+        {/* Browser Notification Status Banner */}
+        <div className="px-4 sm:px-6 py-2.5 bg-indigo-50/80 border-b border-indigo-100 flex items-center justify-between text-xs font-semibold">
+          <div className="flex items-center space-x-2 text-indigo-900">
+            <BellRing className="w-4 h-4 text-indigo-600 shrink-0" />
+            <span>
+              Masaüstü Anlık Bildirimleri:{' '}
+              {browserNotifStatus === 'granted' ? (
+                <span className="font-extrabold text-emerald-700">AKTİF (ETKİN)</span>
+              ) : browserNotifStatus === 'denied' ? (
+                <span className="font-extrabold text-red-600">ENGELLEMİŞ</span>
+              ) : (
+                <span className="font-extrabold text-amber-700">İZİN BEKLENİYOR</span>
+              )}
+            </span>
+          </div>
+
+          {browserNotifStatus !== 'granted' && (
+            <button
+              onClick={handleRequestPermission}
+              className="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-[11px] uppercase tracking-wider rounded-lg transition shadow-xs"
+            >
+              İzin Ver
+            </button>
+          )}
         </div>
 
         {/* Category Filters */}

@@ -35,6 +35,7 @@ import { AuditLogModal } from './components/AuditLogModal';
 import { SecurityPinModal } from './components/SecurityPinModal';
 import { GoogleSheetsModal } from './components/GoogleSheetsModal';
 import { CloudBackupModal } from './components/CloudBackupModal';
+import { CriticalToastAlert } from './components/CriticalToastAlert';
 import { performCloudBackup, getStoredBackupConfig, BackupState } from './lib/cloudBackupService';
 
 import { 
@@ -146,6 +147,13 @@ export default function App() {
   // Evaluate Zero-Error Audit Notifications
   const notifications: AuditNotification[] = useMemo(() => {
     return evaluateZeroErrorRules(updatedDeclarations);
+  }, [updatedDeclarations]);
+
+  // Critical Declarations in final 15-day risk zone
+  const criticalDeclarations = useMemo(() => {
+    return updatedDeclarations.filter(
+      (d) => d.riskLevel === 'CRITICAL' && d.status !== 'CLOSED' && d.status !== 'WAIVED'
+    );
   }, [updatedDeclarations]);
 
   const unreadNotifCount = notifications.filter(n => !n.isRead).length;
@@ -638,6 +646,14 @@ export default function App() {
         session={session}
         onRestoreSuccess={handleRestoreFromCloud}
         onTriggerAuditLog={(action, desc) => addAuditLog('BULUT SENKRONİZASYON', action, desc)}
+      />
+
+      {/* Critical Risk Zone Floating Toast Alert & Web Push Notifications */}
+      <CriticalToastAlert
+        criticalDeclarations={criticalDeclarations}
+        onOpenDetail={(dec) => { setSelectedDeclaration(dec); setIsDetailOpen(true); }}
+        onRequestExtension={(dec) => { setSelectedDeclaration(dec); setIsExtOpen(true); }}
+        onOpenPetition={(dec) => { setSelectedDeclaration(dec); setIsPetitionOpen(true); }}
       />
 
     </div>
