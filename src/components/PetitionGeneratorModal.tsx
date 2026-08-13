@@ -176,7 +176,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-5xl w-full text-slate-900 dark:text-slate-100 shadow-2xl overflow-hidden animate-in fade-in duration-150 flex flex-col max-h-[95vh]">
         
         {/* Top Control Bar */}
-        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3 shrink-0 print:hidden">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
               <Printer className="w-5 h-5" />
@@ -209,7 +209,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
         </div>
 
         {/* Options / Tab Selector & Parameter Form */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 space-y-4 max-h-[45vh] overflow-y-auto">
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 space-y-4 max-h-[45vh] overflow-y-auto print:hidden">
           
           {/* Petition Type Radio / Button Tabs */}
           <div>
@@ -630,8 +630,8 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
         </div>
 
         {/* Printable Paper Preview Area */}
-        <div className="p-4 sm:p-6 overflow-y-auto bg-slate-100 dark:bg-slate-950 text-slate-900 flex-1">
-          <div ref={printRef} className="bg-white text-slate-900 p-6 sm:p-10 rounded-2xl shadow-xl font-serif text-xs leading-relaxed max-w-4xl mx-auto border border-slate-200 print:shadow-none print:p-0 print:border-none print:max-w-none print:w-full">
+        <div className="p-4 sm:p-6 overflow-y-auto bg-slate-100 dark:bg-slate-950 text-slate-900 flex-1 print:p-0 print:m-0 print:bg-white print:overflow-visible">
+          <div ref={printRef} className="printable-paper bg-white text-slate-900 p-6 sm:p-10 rounded-2xl shadow-xl font-serif text-xs leading-relaxed max-w-4xl mx-auto border border-slate-200 print:shadow-none print:p-0 print:border-none print:max-w-none print:w-full print:m-0 print:text-black">
             
             {/* IF QNB MULTI FORMAT EXACT MATCH */}
             {petitionType === 'QNB_MULTI' ? (
@@ -663,19 +663,19 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                     <thead>
                       <tr className="bg-slate-100 font-extrabold text-black divide-x divide-black border-b border-black">
                         <th className="p-1 w-6">#</th>
-                        <th className="p-1 font-bold">
+                        <th className="p-1.5 font-bold min-w-[140px]">
                           Beyanname no<br />
                           <span className="font-normal text-[8px]">(Gümrük Kapısı kodu dahil -18 haneli kod)</span>
                         </th>
-                        <th className="p-1 font-bold">FATURA NO</th>
-                        <th className="p-1 font-bold">Beyanname tarihi</th>
-                        <th className="p-1 font-bold">Beyanname Döviz Cinsi ve tutarı</th>
-                        <th className="p-1 font-bold">Bedelin Hesaba Geçtiği Tarih</th>
-                        <th className="p-1 font-bold">Gelen Bedelin Döviz Cinsi ve Tutarı</th>
-                        <th className="p-1 font-bold">Gelen Bedelin Referans Numarası</th>
-                        <th className="p-1 font-bold">İBKB - GB Bağlantı Tutarı - EUR</th>
-                        <th className="p-1 font-bold">Döviz Hesap Numarası</th>
-                        <th className="p-1 font-bold">TL Hesap Numarası</th>
+                        <th className="p-1.5 font-bold min-w-[90px]">FATURA NO</th>
+                        <th className="p-1.5 font-bold min-w-[85px]">Beyanname tarihi</th>
+                        <th className="p-1.5 font-bold min-w-[110px]">Beyanname Döviz Cinsi ve tutarı</th>
+                        <th className="p-1.5 font-bold min-w-[85px]">Bedelin Hesaba Geçtiği Tarih</th>
+                        <th className="p-1.5 font-bold min-w-[110px]">Gelen Bedelin Döviz Cinsi ve Tutarı</th>
+                        <th className="p-1.5 font-bold min-w-[150px] whitespace-nowrap">Gelen Bedelin Referans Numarası</th>
+                        <th className="p-1.5 font-bold min-w-[110px]">İBKB - GB Bağlantı Tutarı - EUR</th>
+                        <th className="p-1.5 font-bold min-w-[140px]">Döviz Hesap Numarası</th>
+                        <th className="p-1.5 font-bold min-w-[140px]">TL Hesap Numarası</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-black font-medium">
@@ -738,12 +738,12 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                             />
                           </td>
 
-                          <td className="p-1">
+                          <td className="p-1 min-w-[150px]">
                             <input
                               type="text"
                               value={row.referenceNo}
                               onChange={(e) => handleUpdateQnbRow(row.id, 'referenceNo', e.target.value)}
-                              className="w-full bg-transparent text-center font-mono outline-none border-b border-transparent hover:border-slate-300 focus:border-black"
+                              className="w-full bg-transparent text-center font-mono font-bold outline-none border-b border-transparent hover:border-slate-300 focus:border-black text-[10px] px-1"
                             />
                           </td>
 
