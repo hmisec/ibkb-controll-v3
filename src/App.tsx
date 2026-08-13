@@ -72,6 +72,21 @@ export default function App() {
 
   const [session, setSession] = useState<UserSession>(initialSession);
 
+  // Dark Mode State
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const saved = localStorage.getItem('ibkb_dark_mode');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    localStorage.setItem('ibkb_dark_mode', isDarkMode ? 'true' : 'false');
+  }, [isDarkMode]);
+
   // App Security Lock States
   const [appLockEnabled, setAppLockEnabled] = useState<boolean>(() => {
     const saved = localStorage.getItem('ibkb_app_lock_enabled');
@@ -441,11 +456,13 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-indigo-600 selection:text-white transition-colors duration-200">
       
       {/* Header Bar */}
       <Header
         session={session}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
         onToggleSecurity={() => setIsSecurityModalOpen(true)}
         onLockNow={() => setIsAppLocked(true)}
         onOpenNotifications={() => setIsNotifOpen(true)}
@@ -633,6 +650,7 @@ export default function App() {
       <PetitionGeneratorModal
         isOpen={isPetitionOpen}
         declaration={selectedDeclaration}
+        allDeclarations={updatedDeclarations}
         onClose={() => setIsPetitionOpen(false)}
       />
 

@@ -42,15 +42,9 @@ export const AppLockScreen: React.FC<AppLockScreenProps> = ({
       onUnlock();
     } else {
       setIsShaking(true);
-      setErrorMsg(`Hatalı Giriş Şifresi! Lütfen tekrar deneyiniz. (Varsayılan PIN: ${targetPass})`);
+      setErrorMsg('Hatalı Giriş Şifresi! Lütfen geçerli şifrenizi girerek tekrar deneyiniz.');
       setTimeout(() => setIsShaking(false), 500);
     }
-  };
-
-  const handleFillDemo = () => {
-    const targetPass = storedPassword || '1234';
-    setInputPass(targetPass);
-    setErrorMsg('');
   };
 
   return (
@@ -154,15 +148,6 @@ export const AppLockScreen: React.FC<AppLockScreenProps> = ({
             >
               <Unlock className="w-4 h-4" />
               <span>GİRİŞ YAP & KİLİDİ AÇ</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={handleFillDemo}
-              className="w-full py-2 px-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 transition flex items-center justify-center space-x-1.5"
-            >
-              <span>Demo Varsayılan Şifreyi Doldur (1234)</span>
-              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
 

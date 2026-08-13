@@ -1,146 +1,617 @@
-import React, { useRef } from 'react';
-import { X, Printer, Download, FileText, Building2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  X, 
+  Printer, 
+  FileCheck, 
+  Clock, 
+  Sparkles, 
+  Building2, 
+  CheckCircle2, 
+  FileText, 
+  Plus, 
+  Trash2,
+  Table as TableIcon
+} from 'lucide-react';
 import { Declaration } from '../types';
 import { formatCurrency, getDeadlineDateStr } from '../utils/exportCalculations';
 
 interface PetitionGeneratorModalProps {
   isOpen: boolean;
   declaration: Declaration | null;
+  allDeclarations?: Declaration[];
   onClose: () => void;
+}
+
+export type PetitionType = 'CLOSING' | 'QNB_MULTI' | 'EXTENSION' | 'TERKIN';
+
+interface QnbRow {
+  id: string;
+  declarationNo: string;
+  invoiceNo: string;
+  declarationDate: string;
+  declarationAmountAndCurr: string;
+  creditDate: string;
+  incomingAmountAndCurr: string;
+  referenceNo: string;
+  ibkbGbLinkAmount: string;
+  dovizAccountNo: string;
+  tlAccountNo: string;
 }
 
 export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
   isOpen,
   declaration,
+  allDeclarations = [],
   onClose,
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Petition state options
+  const [petitionType, setPetitionType] = useState<PetitionType>('QNB_MULTI');
+  const [bankName, setBankName] = useState<string>('QNB FİNANSBANK A.Ş.');
+  const [bankBranch, setBankBranch] = useState<string>('TİCARİ ŞUBESİ MÜDÜRLÜĞÜ’NE');
+  const [customSubject, setCustomSubject] = useState<string>('');
+
+  // QNB Finansbank Specific State
+  const [qnbIban, setQnbIban] = useState<string>('TR33 0011 1000 0000 9876 5432 10');
+  const [tcmbRate, setTcmbRate] = useState<string>('30');
+  const [qnbRows, setQnbRows] = useState<QnbRow[]>([]);
+
+  // Initialize QNB rows when declaration or petitionType changes
+  useEffect(() => {
+    if (declaration) {
+      const initialRow: QnbRow = {
+        id: 'qnb-row-1',
+        declarationNo: declaration.declarationNo || '',
+        invoiceNo: 'FT-2026-' + Math.floor(10000 + Math.random() * 90000),
+        declarationDate: declaration.closingDate || '',
+        declarationAmountAndCurr: `${declaration.remainingAmount.toLocaleString('tr-TR')} ${declaration.currency}`,
+        creditDate: declaration.closingDate || '',
+        incomingAmountAndCurr: `${declaration.remainingAmount.toLocaleString('tr-TR')} ${declaration.currency}`,
+        referenceNo: 'FT' + Math.floor(1000000000 + Math.random() * 9000000000),
+        ibkbGbLinkAmount: `${declaration.remainingAmount.toLocaleString('tr-TR')} ${declaration.currency}`,
+        dovizAccountNo: 'TR33 0011 1000 0000 9876 5432 10',
+        tlAccountNo: 'TR12 0011 1000 0000 1234 5678 90',
+      };
+      setQnbRows([initialRow]);
+    }
+  }, [declaration]);
+
   if (!isOpen || !declaration) return null;
 
-  const todayStr = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric' });
-  const deadlineStr = getDeadlineDateStr(declaration.closingDate, false);
+  const todayStr = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const deadlineStr = getDeadlineDateStr(declaration.closingDate, declaration.hasExtension);
 
   const handlePrint = () => {
     window.print();
   };
 
+  const handleAddQnbRow = () => {
+    const newRow: QnbRow = {
+      id: 'qnb-row-' + Date.now(),
+      declarationNo: '2634' + Math.floor(10000000000000 + Math.random() * 90000000000000),
+      invoiceNo: 'FT-2026-' + Math.floor(10000 + Math.random() * 90000),
+      declarationDate: new Date().toISOString().substring(0, 10),
+      declarationAmountAndCurr: '50.000,00 EUR',
+      creditDate: new Date().toISOString().substring(0, 10),
+      incomingAmountAndCurr: '50.000,00 EUR',
+      referenceNo: 'FT' + Math.floor(1000000000 + Math.random() * 9000000000),
+      ibkbGbLinkAmount: '50.000,00 EUR',
+      dovizAccountNo: qnbIban,
+      tlAccountNo: 'TR12 0011 1000 0000 1234 5678 90',
+    };
+    setQnbRows((prev) => [...prev, newRow]);
+  };
+
+  const handleRemoveQnbRow = (id: string) => {
+    if (qnbRows.length <= 1) return;
+    setQnbRows((prev) => prev.filter((r) => r.id !== id));
+  };
+
+  const handleUpdateQnbRow = (id: string, field: keyof QnbRow, value: string) => {
+    setQnbRows((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, [field]: value } : r))
+    );
+  };
+
+  // Determine Subject and Body based on selected Petition Type
+  let defaultSubject = '';
+  if (petitionType === 'CLOSING') {
+    defaultSubject = `${declaration.declarationNo} Nolu Gümrük Beyannamesine İlişkin İhracat Hesabının İBKB Belgeleri İle Kapatılması Hk.`;
+  } else if (petitionType === 'EXTENSION') {
+    defaultSubject = `${declaration.declarationNo} Nolu Gümrük Beyannamesi İçin TCMB İhracat Genelgesi Madde 8 Uyarınca +90 Gün Ek Süre Talebi Hk.`;
+  } else if (petitionType === 'TERKIN') {
+    defaultSubject = `${declaration.declarationNo} Nolu Gümrük Beyannamesinin TCMB İhracat Genelgesi Madde 28 Uyarınca Terkin (%10 / $30K Muafiyet) Kapsamında Kapatılması Hk.`;
+  } else if (petitionType === 'QNB_MULTI') {
+    defaultSubject = 'İHRACAT ÇOKLU İBKB TALİMATI';
+  }
+
+  const activeSubject = customSubject || defaultSubject;
+
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full text-slate-900 shadow-2xl overflow-hidden animate-in fade-in duration-150 flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-5xl w-full text-slate-900 dark:text-slate-100 shadow-2xl overflow-hidden animate-in fade-in duration-150 flex flex-col max-h-[95vh]">
         
-        {/* Header */}
-        <div className="p-6 border-b border-slate-200 bg-white flex items-center justify-between shrink-0">
+        {/* Top Control Bar */}
+        <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
               <Printer className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-black uppercase tracking-tight text-slate-900">RESMİ BANKA EK SÜRE DİLEKÇESİ YAZDIR</h3>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">{declaration.declarationNo}</p>
+              <h3 className="text-base sm:text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white">
+                RESMİ BANKA DİLEKÇESİ & İBKB TALİMATI
+              </h3>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                BEYANNAME NO: {declaration.declarationNo}
+              </p>
             </div>
           </div>
 
           <div className="flex items-center space-x-2">
             <button
               onClick={handlePrint}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-wider px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-lg shadow-indigo-100 transition"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-wider px-4 py-2.5 rounded-xl flex items-center gap-1.5 shadow-lg shadow-indigo-100 dark:shadow-none transition"
             >
               <Printer className="w-4 h-4" />
               <span>YAZDIR / PDF KAYDET</span>
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition border border-slate-200"
+              className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition border border-slate-200 dark:border-slate-700"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Printable Letter Body */}
-        <div className="p-6 overflow-y-auto bg-slate-50 text-slate-900 flex-1">
-          <div ref={printRef} className="bg-white text-slate-900 p-8 rounded-2xl shadow-xl font-serif text-sm leading-relaxed max-w-xl mx-auto border border-slate-200 print:shadow-none print:p-0 print:border-none">
+        {/* Options / Tab Selector */}
+        <div className="p-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 space-y-3">
+          
+          {/* Petition Type Radio / Button Tabs */}
+          <div>
+            <label className="block text-[11px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+              Dilekçe & Talimat Formatı Seçiniz:
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+              
+              <button
+                type="button"
+                onClick={() => setPetitionType('QNB_MULTI')}
+                className={`p-2.5 rounded-xl font-extrabold uppercase tracking-wider text-left border transition flex items-center gap-2 ${
+                  petitionType === 'QNB_MULTI'
+                    ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-100 dark:shadow-none'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <TableIcon className="w-4 h-4 shrink-0" />
+                <span>1. QNB Finansbank Çoklu İBKB Talimatı</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setPetitionType('CLOSING'); setCustomSubject(''); }}
+                className={`p-2.5 rounded-xl font-extrabold uppercase tracking-wider text-left border transition flex items-center gap-2 ${
+                  petitionType === 'CLOSING'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-100 dark:shadow-none'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <FileCheck className="w-4 h-4 shrink-0" />
+                <span>2. İBKB Kapatma Dilekçesi (Tekli)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setPetitionType('EXTENSION'); setCustomSubject(''); }}
+                className={`p-2.5 rounded-xl font-extrabold uppercase tracking-wider text-left border transition flex items-center gap-2 ${
+                  petitionType === 'EXTENSION'
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100 dark:shadow-none'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Clock className="w-4 h-4 shrink-0" />
+                <span>3. +90 Gün Ek Süre Dilekçesi</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setPetitionType('TERKIN'); setCustomSubject(''); }}
+                className={`p-2.5 rounded-xl font-extrabold uppercase tracking-wider text-left border transition flex items-center gap-2 ${
+                  petitionType === 'TERKIN'
+                    ? 'bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-100 dark:shadow-none'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Sparkles className="w-4 h-4 shrink-0" />
+                <span>4. Terkinli Kapatma Dilekçesi</span>
+              </button>
+
+            </div>
+          </div>
+
+          {/* QNB Finansbank Multi-Row Controls */}
+          {petitionType === 'QNB_MULTI' && (
+            <div className="p-3 bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 rounded-2xl space-y-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-xs font-black text-purple-900 dark:text-purple-200 uppercase flex items-center gap-1.5">
+                  <Building2 className="w-4 h-4 text-purple-600" />
+                  <span>QNB FİNANSBANK A.Ş. İHRAÇAT ÇOKLU İBKB TALİMATI PARAMETRELERİ</span>
+                </div>
+                
+                <button
+                  type="button"
+                  onClick={handleAddQnbRow}
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-extrabold text-[11px] uppercase rounded-xl transition flex items-center gap-1"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Satır Eklesene ({qnbRows.length})</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div>
+                  <label className="block text-[10px] font-extrabold text-purple-800 dark:text-purple-300 uppercase mb-1">
+                    Gelen Bedel Döviz IBAN Hesabı
+                  </label>
+                  <input
+                    type="text"
+                    value={qnbIban}
+                    onChange={(e) => setQnbIban(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl px-3 py-1.5 font-mono font-bold text-slate-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-extrabold text-purple-800 dark:text-purple-300 uppercase mb-1">
+                    TCMB Döviz Satış Oranı (%)
+                  </label>
+                  <select
+                    value={tcmbRate}
+                    onChange={(e) => setTcmbRate(e.target.value)}
+                    className="w-full bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 rounded-xl px-3 py-1.5 font-bold text-slate-900 dark:text-white"
+                  >
+                    <option value="30">%30 (TCMB Zorunlu Döviz Satış Oranı)</option>
+                    <option value="40">%40 (Önceki Genelge Oranı)</option>
+                    <option value="0">%0 (Muafiyetli Sektör / Hizmet İhracatı)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Editable Table Rows Inputs */}
+              <div className="max-h-40 overflow-y-auto space-y-2 pr-1 pt-1">
+                {qnbRows.map((row, idx) => (
+                  <div key={row.id} className="p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl grid grid-cols-1 sm:grid-cols-5 gap-2 items-center text-[11px]">
+                    <div className="font-extrabold text-slate-500">
+                      #{idx + 1} Beyanname No:
+                      <input
+                        type="text"
+                        value={row.declarationNo}
+                        onChange={(e) => handleUpdateQnbRow(row.id, 'declarationNo', e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-mono font-bold text-slate-900 dark:text-white mt-0.5"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="font-bold text-slate-500">Fatura No:</span>
+                      <input
+                        type="text"
+                        value={row.invoiceNo}
+                        onChange={(e) => handleUpdateQnbRow(row.id, 'invoiceNo', e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-slate-900 dark:text-white mt-0.5"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="font-bold text-slate-500">Gelen Bedel & Tutarı:</span>
+                      <input
+                        type="text"
+                        value={row.incomingAmountAndCurr}
+                        onChange={(e) => handleUpdateQnbRow(row.id, 'incomingAmountAndCurr', e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-slate-900 dark:text-white mt-0.5"
+                      />
+                    </div>
+
+                    <div>
+                      <span className="font-bold text-slate-500">Gelen Bedel Ref No:</span>
+                      <input
+                        type="text"
+                        value={row.referenceNo}
+                        onChange={(e) => handleUpdateQnbRow(row.id, 'referenceNo', e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 font-mono font-bold text-slate-900 dark:text-white mt-0.5"
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-1 justify-end pt-3">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveQnbRow(row.id)}
+                        disabled={qnbRows.length <= 1}
+                        className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 rounded-lg transition disabled:opacity-30"
+                        title="Satırı Sil"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+          )}
+
+          {/* Standard Target Bank Customization Inputs */}
+          {petitionType !== 'QNB_MULTI' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              <div>
+                <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1">
+                  İlgili Banka Unvanı
+                </label>
+                <select
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-black text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600"
+                >
+                  <option value="TÜRKİYE İŞ BANKASI A.Ş.">TÜRKİYE İŞ BANKASI A.Ş.</option>
+                  <option value="T.C. ZİRAAT BANKASI A.Ş.">T.C. ZİRAAT BANKASI A.Ş.</option>
+                  <option value="TÜRKİYE GARANTİ BANKASI A.Ş. (GARANTİ BBVA)">TÜRKİYE GARANTİ BANKASI A.Ş. (GARANTİ BBVA)</option>
+                  <option value="AKBANK T.A.Ş.">AKBANK T.A.Ş.</option>
+                  <option value="YAPI VE KREDİ BANKASI A.Ş.">YAPI VE KREDİ BANKASI A.Ş.</option>
+                  <option value="TÜRKİYE HALK BANKASI A.Ş.">TÜRKİYE HALK BANKASI A.Ş.</option>
+                  <option value="TÜRKİYE VAKIFLAR BANKASI T.A.O. (VAKIFBANK)">TÜRKİYE VAKIFLAR BANKASI T.A.O. (VAKIFBANK)</option>
+                  <option value="QNB FİNANSBANK A.Ş.">QNB FİNANSBANK A.Ş.</option>
+                  <option value="KUVEYT TÜRK KATILIM BANKASI A.Ş.">KUVEYT TÜRK KATILIM BANKASI A.Ş.</option>
+                  <option value="DENİZBANK A.Ş.">DENİZBANK A.Ş.</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mb-1">
+                  İlgili Şube Müdürlüğü Unvanı
+                </label>
+                <input
+                  type="text"
+                  value={bankBranch}
+                  onChange={(e) => setBankBranch(e.target.value)}
+                  placeholder="Örn: KADIKÖY TİCARİ ŞUBESİ MÜDÜRLÜĞÜ’NE"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-600"
+                />
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* Printable Paper Preview Area */}
+        <div className="p-4 sm:p-6 overflow-y-auto bg-slate-100 dark:bg-slate-950 text-slate-900 flex-1">
+          <div ref={printRef} className="bg-white text-slate-900 p-6 sm:p-10 rounded-2xl shadow-xl font-serif text-xs leading-relaxed max-w-4xl mx-auto border border-slate-200 print:shadow-none print:p-0 print:border-none print:max-w-none print:w-full">
             
-            {/* Letterhead */}
-            <div className="text-center font-black border-b border-slate-200 pb-4 mb-6">
-              <div className="text-base tracking-wide uppercase">{declaration.exporterTitle || 'GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.'}</div>
-              <div className="text-xs font-sans text-slate-500 font-bold mt-1 uppercase tracking-wider">
-                Vergi Kimlik No: {declaration.exporterTaxNo || '3960817425'} • İhracat Departmanı
+            {/* IF QNB MULTI FORMAT EXACT MATCH */}
+            {petitionType === 'QNB_MULTI' ? (
+              <div className="font-sans text-black space-y-4">
+                
+                {/* QNB Header Title */}
+                <div className="text-center font-black text-sm uppercase tracking-wide">
+                  İHRACAT ÇOKLU İBKB TALİMATI
+                </div>
+
+                <div className="flex justify-between items-baseline font-black text-xs pt-2">
+                  <div>QNB FİNANSBANK A.Ş.</div>
+                  <div>TARİH: {todayStr}</div>
+                </div>
+
+                {/* Main Legal Paragraph 1 */}
+                <p className="text-justify font-medium leading-relaxed">
+                  Nezdinizdeki <strong>[{qnbIban}]</strong> nolu hesabımıza ihracat bedeli olarak gelen ve aşağıda detayı bulunan işlemlerin gerçekleştirilerek İBKB düzenlenmesini rica ederiz.
+                </p>
+
+                {/* Main Legal Paragraph 2 (TCMB Döviz Satış Kararı) */}
+                <p className="text-justify font-normal leading-relaxed text-[11px]">
+                  İhracat Genelgesinin Ek 1 inci Maddesinde tarif edilen döviz cinsleri (USD-EUR-GBP) için düzenlenecek İBKB tutarlarının %<strong>{tcmbRate}</strong> 'lik kısmının aşağıda belirtilen döviz tevdiat hesabımıza borç geçilerek döviz satışı yapılmak üzere T.C. Merkez Bankasına satılmasını ve işbu talimatımızın Bankanıza ulaştığı saatten bağımsız “Türkiye Cumhuriyet Merkez Bankasına Yapılacak Döviz Satışına İlişkin Uygulama Talimatı“ hükümleri çerçevesinde İBKB düzenlendiği anda geçerli olacak işlem kuru (Merkez Bankası tarafından saat 10:00, 11:00, 12:00, 13:00, 14:00 ve 15:00'de ilan edilen ve İBKB düzenlendiği saat itibarıyla en son açıklanmış olan döviz alış kuru) üzerinden hesaplanacak TL karşılığının aşağıda belirttiğimiz TL hesabımıza veya Bankanız nezdindeki herhangi bir TL hesaba alacak geçilmesini kabul ve beyan ederiz.
+                </p>
+
+                {/* QNB Multi-Column Table (Matching Exact Image Structure) */}
+                <div className="border-2 border-black overflow-x-auto my-4">
+                  <table className="w-full text-center text-[10px] border-collapse border border-black">
+                    <thead>
+                      <tr className="bg-slate-100 font-extrabold text-black divide-x divide-black border-b border-black">
+                        <th className="p-1.5 w-6">#</th>
+                        <th className="p-1.5 font-bold">
+                          Beyanname no<br />
+                          <span className="font-normal text-[9px]">(Gümrük Kapısı kodu dahil -18 haneli kod)</span>
+                        </th>
+                        <th className="p-1.5 font-bold">FATURA NO</th>
+                        <th className="p-1.5 font-bold">Beyanname tarihi</th>
+                        <th className="p-1.5 font-bold">Beyanname Döviz Cinsi ve tutarı</th>
+                        <th className="p-1.5 font-bold">Bedelin Hesaba Geçtiği Tarih</th>
+                        <th className="p-1.5 font-bold">Gelen Bedelin Döviz Cinsi ve Tutarı</th>
+                        <th className="p-1.5 font-bold">Gelen Bedelin Referans Numarası</th>
+                        <th className="p-1.5 font-bold">İBKB - GB Bağlantı Tutarı - EUR</th>
+                        <th className="p-1.5 font-bold">Döviz Hesap Numarası</th>
+                        <th className="p-1.5 font-bold">TL Hesap Numarası</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black font-medium">
+                      {qnbRows.map((row, idx) => (
+                        <tr key={row.id} className="divide-x divide-black hover:bg-slate-50">
+                          <td className="p-1.5 font-bold">{idx + 1}</td>
+                          <td className="p-1.5 font-mono font-bold">{row.declarationNo}</td>
+                          <td className="p-1.5">{row.invoiceNo}</td>
+                          <td className="p-1.5">{row.declarationDate}</td>
+                          <td className="p-1.5 font-bold">{row.declarationAmountAndCurr}</td>
+                          <td className="p-1.5">{row.creditDate}</td>
+                          <td className="p-1.5 font-bold">{row.incomingAmountAndCurr}</td>
+                          <td className="p-1.5 font-mono">{row.referenceNo}</td>
+                          <td className="p-1.5 font-bold">{row.ibkbGbLinkAmount}</td>
+                          <td className="p-1.5 font-mono text-[9px]">{row.dovizAccountNo}</td>
+                          <td className="p-1.5 font-mono text-[9px]">{row.tlAccountNo}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Footer Signatures */}
+                <div className="pt-6 font-bold space-y-4 text-xs">
+                  <div>Saygılarımızla,</div>
+                  <div className="pt-8 flex justify-between items-start">
+                    <div>
+                      <div>KAŞE İMZA</div>
+                      <div className="text-[10px] text-slate-600">{declaration.exporterTitle || 'GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.'}</div>
+                    </div>
+
+                    <div className="text-right">
+                      <div>MÜDÜR</div>
+                      <div className="text-[10px] text-slate-600">İhrakat & Dış Ticaret Operasyonları</div>
+                    </div>
+                  </div>
+                </div>
+
               </div>
-            </div>
+            ) : (
+              /* STANDARD SINGLE DECLARATION PETITIONS */
+              <div>
+                {/* Letterhead */}
+                <div className="text-center font-black border-b border-slate-300 pb-4 mb-6">
+                  <div className="text-base tracking-wide uppercase font-sans font-black">{declaration.exporterTitle || 'GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.'}</div>
+                  <div className="text-xs font-sans text-slate-600 font-bold mt-1 uppercase tracking-wider">
+                    Vergi Kimlik No: {declaration.exporterTaxNo || '3960817425'} • İhracat & Dış Ticaret Operasyon Departmanı
+                  </div>
+                </div>
 
-            <div className="text-right font-sans text-xs text-slate-500 mb-6 font-bold uppercase tracking-wider">
-              Tarih: {todayStr}
-            </div>
+                {/* Date */}
+                <div className="text-right font-sans text-xs text-slate-600 mb-6 font-bold uppercase tracking-wider">
+                  Tarih: {todayStr}
+                </div>
 
-            <div className="text-center font-black text-base mb-6 tracking-wide uppercase">
-              TÜRKİYE İŞ BANKASI A.Ş.<br />
-              <span className="text-sm font-bold text-slate-700">KADIKÖY TİCARİ ŞUBESİ MÜDÜRLÜĞÜ’NE</span>
-            </div>
+                {/* Target Bank Addressing Header */}
+                <div className="text-center font-black text-base mb-6 tracking-wide uppercase font-sans">
+                  {bankName}<br />
+                  <span className="text-sm font-bold text-slate-800">{bankBranch}</span>
+                </div>
 
-            <div className="space-y-4 text-justify font-sans text-xs text-slate-800 font-medium">
-              <p>
-                <strong className="font-black uppercase">Konu:</strong> {declaration.declarationNo} Nolu Gümrük Beyannamesi İçin TCMB İhracat Genelgesi Madde 8 Uyarınca +90 Gün Ek Süre Talebi Hk.
-              </p>
+                {/* Letter Body Content according to selected type */}
+                <div className="space-y-4 text-justify font-sans text-xs text-slate-800 font-medium">
+                  
+                  <p>
+                    <strong className="font-black uppercase text-slate-900">Konu:</strong> {activeSubject}
+                  </p>
 
-              <p>
-                Şirketimiz tarafından gerçekleştirilen ve detayları aşağıda yer alan ihracat işlemine ilişkin bedelin yurda getirilerek İBKB (İhracat Bedeli Kabul Belgesi) veya DAB'a bağlanması süreci devam etmektedir.
-              </p>
+                  <p>
+                    Şirketimiz tarafından gerçekleştirilen ve detayları aşağıda sunulan ihracat işlemimize ilişkin gümrük beyannamesi ve ödeme bilgileri kayıtlarınızdadır.
+                  </p>
 
-              {/* Table details */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden my-4 shadow-2xs">
-                <table className="w-full text-left text-xs font-sans border-collapse">
-                  <tbody className="divide-y divide-slate-200">
-                    <tr className="bg-slate-50">
-                      <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider w-2/5">Gümrük Beyanname No:</td>
-                      <td className="py-2 px-3 font-mono font-black text-slate-900">{declaration.declarationNo}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Fiili İntaç Tarihi:</td>
-                      <td className="py-2 px-3 font-bold">{declaration.closingDate}</td>
-                    </tr>
-                    <tr className="bg-slate-50">
-                      <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Alıcı Firma & Ülke:</td>
-                      <td className="py-2 px-3 font-bold">{declaration.importerTitle} ({declaration.destinationCountry})</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Toplam İhracat Tutarı:</td>
-                      <td className="py-2 px-3 font-black text-slate-900">{formatCurrency(declaration.amount, declaration.currency)}</td>
-                    </tr>
-                    <tr className="bg-slate-50">
-                      <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Açık Kapama Bekleyen Tutar:</td>
-                      <td className="py-2 px-3 font-black text-red-700">{formatCurrency(declaration.remainingAmount, declaration.currency)}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Mevcut 180 Günlük Son Tarih:</td>
-                      <td className="py-2 px-3 font-black text-slate-900">{deadlineStr}</td>
-                    </tr>
-                  </tbody>
-                </table>
+                  {/* Table details */}
+                  <div className="border border-slate-300 rounded-xl overflow-hidden my-4 shadow-2xs font-sans">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <tbody className="divide-y divide-slate-200">
+                        <tr className="bg-slate-50">
+                          <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider w-2/5">Gümrük Beyanname No:</td>
+                          <td className="py-2 px-3 font-mono font-black text-slate-900">{declaration.declarationNo}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Fiili İntaç / Kapanış Tarihi:</td>
+                          <td className="py-2 px-3 font-bold text-slate-900">{declaration.closingDate}</td>
+                        </tr>
+                        <tr className="bg-slate-50">
+                          <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Alıcı Firma & Ülke:</td>
+                          <td className="py-2 px-3 font-bold text-slate-900">{declaration.importerTitle} ({declaration.destinationCountry})</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Beyanname Toplam Tutarı:</td>
+                          <td className="py-2 px-3 font-black text-slate-900">{formatCurrency(declaration.amount, declaration.currency)}</td>
+                        </tr>
+                        <tr className="bg-slate-50">
+                          <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Daha Önce Kapatılan Tutar:</td>
+                          <td className="py-2 px-3 font-black text-emerald-700">{formatCurrency(declaration.closedAmount, declaration.currency)}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Açık / Kalan Bakiye:</td>
+                          <td className="py-2 px-3 font-black text-red-700">{formatCurrency(declaration.remainingAmount, declaration.currency)}</td>
+                        </tr>
+                        <tr className="bg-slate-50">
+                          <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Yasal Son İşlem Tarihi:</td>
+                          <td className="py-2 px-3 font-black text-slate-900">{deadlineStr}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Dynamic Body Text */}
+                  {petitionType === 'CLOSING' && (
+                    <>
+                      <p>
+                        Söz konusu beyannameye ilişkin ihracat bedeli yurda getirilmiş ve ekte sunulan İBKB (İhracat Bedeli Kabul Belgesi) / DAB belgeleri düzenlenmiştir.
+                      </p>
+                      
+                      {declaration.ibkbRecords.length > 0 && (
+                        <div className="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl my-2 text-emerald-950 font-sans">
+                          <div className="font-extrabold text-[11px] text-emerald-900 uppercase mb-1 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            İlişik İBKB Belgeleri Listesi:
+                          </div>
+                          <ul className="list-disc list-inside space-y-0.5 text-[11px]">
+                            {declaration.ibkbRecords.map((ibkb) => (
+                              <li key={ibkb.id}>
+                                <strong className="font-mono">{ibkb.ibkbNo}</strong> - {ibkb.bankName} ({ibkb.documentDate}): {formatCurrency(ibkb.amount, ibkb.currency)}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      <p>
+                        Düzenlenen İBKB belgeleri ile ihracat bedelimizin tamamı/ilgili kısmı karşılanmış olduğundan, TCMB İhracat Genelgesi hükümleri çerçevesinde ilgili <strong>ihracat hesabının resmi olarak kapatılmasını</strong> ve kapanış onayının tarafımıza bildirilmesini arz ederiz.
+                      </p>
+                    </>
+                  )}
+
+                  {petitionType === 'EXTENSION' && (
+                    <>
+                      <p>
+                        Yurtdışı alıcı firmanın finansal operasyonel takvimi ve uluslararası banka transfer süreçlerindeki dönemsel gecikmeler (haklı sebep) nedeniyle ihracat bedelinin tahsilat ve İBKB kapama işlemleri devam etmektedir.
+                      </p>
+                      <p>
+                        TCMB İhracat Genelgesi'nin 8. maddesi uyarınca, beyanname kapanış süremizin dolmasına mahal vermeden tarafımıza <strong>+90 (doksan) gün ek süre</strong> tanınmasını ve bankanız / TCMB sistemindeki ek süre kayıtlarının güncellenmesini saygılarımızla arz ve talep ederiz.
+                      </p>
+                    </>
+                  )}
+
+                  {petitionType === 'TERKIN' && (
+                    <>
+                      <p>
+                        İhracat bedelinin kapatılamayan kalan kısmı <strong>{formatCurrency(declaration.remainingAmount, declaration.currency)}</strong> tutarındadır.
+                      </p>
+                      <p>
+                        TCMB İhracat Genelgesi'nin 28. maddesi uyarınca; beyanname açık bakiyesi 30.000 USD (veya %10 yasal terkin sınırı) dahilinde kaldığından, kalan tutarın <strong>Müstesna / Terkin Kapsamında kapatılması</strong> hususunu ve beyannamenin kapatıldığına dair onay yazısının tarafımıza iletilmesini arz ederiz.
+                      </p>
+                    </>
+                  )}
+
+                </div>
+
+                {/* Signatures */}
+                <div className="mt-12 flex justify-between font-sans text-xs">
+                  <div className="text-left">
+                    <div className="font-extrabold text-slate-700 uppercase tracking-wider">Ekler:</div>
+                    <div className="text-[10px] text-slate-600 font-bold mt-1">
+                      1. Gümrük Beyannamesi Örneği<br />
+                      {petitionType === 'CLOSING' && '2. İBKB / DAB Belgesi Suretleri<br />'}
+                      {petitionType === 'EXTENSION' && '2. Swift / Yurt Dışı Muvafakat Yazışması<br />'}
+                      {petitionType === 'TERKIN' && '2. Terkin Hesaplama Cetveli<br />'}
+                      3. İmza Sirküleri Sureti
+                    </div>
+                  </div>
+
+                  <div className="text-center font-black">
+                    <div>{declaration.exporterTitle || 'GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.'}</div>
+                    <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-1">Şirket Yetkilisi İmza / Kaşe</div>
+                    <div className="mt-12 border-b-2 border-slate-400 w-40 mx-auto"></div>
+                  </div>
+                </div>
+
               </div>
-
-              <p>
-                Yurtdışı alıcı firmanın finansal operasyonel takvimi ve uluslararası banka transfer süreçlerindeki dönemsel gecikmeler (haklı sebep) nedeniyle ihracat bedelinin tahsilatı devam etmektedir.
-              </p>
-
-              <p>
-                TCMB İhracat Genelgesi'nin 8. maddesi uyarınca, beyanname kapanış süremizin dolmasına mahal vermeden tarafımıza <strong>+90 (doksan) gün ek süre</strong> tanınmasını ve gerekli sistem onaylarının yapılmasını saygılarımızla arz ve talep ederiz.
-              </p>
-            </div>
-
-            {/* Signatures */}
-            <div className="mt-12 flex justify-between font-sans text-xs">
-              <div className="text-center">
-                <div className="font-extrabold text-slate-700 uppercase tracking-wider">Ekler:</div>
-                <div className="text-[10px] text-slate-500 font-bold mt-1">1. Gümrük Beyannamesi Örneği<br />2. Swift / Yurt Dışı Yazışma Örneği</div>
-              </div>
-              <div className="text-center font-black">
-                <div>{declaration.exporterTitle}</div>
-                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mt-1">Şirket Yetkilisi İmza / Kaşe</div>
-                <div className="mt-10 border-b border-slate-300 w-36 mx-auto"></div>
-              </div>
-            </div>
+            )}
 
           </div>
         </div>
