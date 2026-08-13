@@ -1,0 +1,6 @@
+{
+  "name": "İhracat Beyanname & İBKB Otomatik Takip Sistemi",
+  "description": "Türkiye ihracat mevzuatına uygun 180 günlük yasal İBKB/DAB kapama takibi, sıfır-hata bildirim ve denetim paneli, otomatik alarm ve güvenli beyanname yönetim sistemi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
