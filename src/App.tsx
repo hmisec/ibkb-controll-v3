@@ -33,6 +33,7 @@ import { PetitionGeneratorModal } from './components/PetitionGeneratorModal';
 import { AiAssistantModal } from './components/AiAssistantModal';
 import { AuditLogModal } from './components/AuditLogModal';
 import { SecurityPinModal } from './components/SecurityPinModal';
+import { AppLockScreen } from './components/AppLockScreen';
 import { GoogleSheetsModal } from './components/GoogleSheetsModal';
 import { CloudBackupModal } from './components/CloudBackupModal';
 import { CriticalToastAlert } from './components/CriticalToastAlert';
@@ -70,6 +71,34 @@ export default function App() {
   });
 
   const [session, setSession] = useState<UserSession>(initialSession);
+
+  // App Security Lock States
+  const [appLockEnabled, setAppLockEnabled] = useState<boolean>(() => {
+    const saved = localStorage.getItem('ibkb_app_lock_enabled');
+    return saved !== null ? saved === 'true' : true;
+  });
+
+  const [appPassword, setAppPassword] = useState<string>(() => {
+    return localStorage.getItem('ibkb_app_password') || '1234';
+  });
+
+  const [isAppLocked, setIsAppLocked] = useState<boolean>(() => {
+    const savedLock = localStorage.getItem('ibkb_app_lock_enabled');
+    return savedLock !== null ? savedLock === 'true' : true;
+  });
+
+  const handleUpdateSecurityConfig = (enabled: boolean, newPassword: string) => {
+    setAppLockEnabled(enabled);
+    setAppPassword(newPassword);
+    localStorage.setItem('ibkb_app_lock_enabled', enabled ? 'true' : 'false');
+    localStorage.setItem('ibkb_app_password', newPassword);
+    addAuditLog('GÜVENLİK YAPILANDIRMASI', 'Giriş Şifresi Güncellendi', `Açılışta Şifre İste: ${enabled ? 'AÇIK' : 'KAPALI'}`);
+  };
+
+  const handleUnlockApp = () => {
+    setIsAppLocked(false);
+    addAuditLog('OTURUM GÜVENLİĞİ', 'Kilit Açıldı', 'Kullanıcı giriş şifresini doğrulayarak sisteme erişti.');
+  };
 
   // Filters state
   const [searchTerm, setSearchTerm] = useState('');
@@ -418,6 +447,7 @@ export default function App() {
       <Header
         session={session}
         onToggleSecurity={() => setIsSecurityModalOpen(true)}
+        onLockNow={() => setIsAppLocked(true)}
         onOpenNotifications={() => setIsNotifOpen(true)}
         unreadNotifCount={unreadNotifCount}
         criticalCount={stats.criticalAlarmCount}
@@ -625,9 +655,24 @@ export default function App() {
       <SecurityPinModal
         isOpen={isSecurityModalOpen}
         session={session}
+        appLockEnabled={appLockEnabled}
+        appPassword={appPassword}
         onClose={() => setIsSecurityModalOpen(false)}
         onUpdateRole={(newRole, newName) => setSession((prev) => ({ ...prev, userRole: newRole, userName: newName }))}
+        onUpdateSecurityConfig={handleUpdateSecurityConfig}
+        onLockAppNow={() => setIsAppLocked(true)}
       />
+
+      {/* Full-Screen System Entrance Lock Gate */}
+      {isAppLocked && (
+        <AppLockScreen
+          companyName={session.companyName}
+          userRole={session.userRole}
+          userName={session.userName}
+          storedPassword={appPassword}
+          onUnlock={handleUnlockApp}
+        />
+      )}
 
       {/* Google Sheets Modal */}
       <GoogleSheetsModal

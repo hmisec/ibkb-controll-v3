@@ -17,6 +17,7 @@ import { UserSession } from '../types';
 interface HeaderProps {
   session: UserSession;
   onToggleSecurity: () => void;
+  onLockNow: () => void;
   onOpenNotifications: () => void;
   unreadNotifCount: number;
   criticalCount: number;
@@ -32,6 +33,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   session,
   onToggleSecurity,
+  onLockNow,
   onOpenNotifications,
   unreadNotifCount,
   criticalCount,
@@ -153,19 +155,26 @@ export const Header: React.FC<HeaderProps> = ({
               <span className="hidden xl:inline">EXPORT</span>
             </button>
 
-            {/* Security Lock Toggle */}
-            <button
-              onClick={onToggleSecurity}
-              className={`px-3 py-2.5 rounded-xl transition border text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${
-                session.pinRequired
-                  ? 'bg-amber-50 border-amber-200 text-amber-800'
-                  : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
-              }`}
-              title="Güvenlik & Rol Modu"
-            >
-              {session.pinRequired ? <Lock className="w-4 h-4 text-amber-600" /> : <Unlock className="w-4 h-4 text-slate-500" />}
-              <span className="hidden md:inline">{session.userRole}</span>
-            </button>
+            {/* Security Lock Toggle & Role Settings */}
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={onToggleSecurity}
+                className="px-3 py-2.5 rounded-l-xl bg-slate-100 border border-slate-200 hover:bg-slate-200 text-slate-700 transition text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5"
+                title="Kullanıcı Rolü & Şifre Ayarları"
+              >
+                <Unlock className="w-4 h-4 text-slate-500" />
+                <span className="hidden md:inline">{session.userRole}</span>
+              </button>
+
+              <button
+                onClick={onLockNow}
+                className="px-2.5 py-2.5 rounded-r-xl bg-amber-50 hover:bg-amber-100 border border-l-0 border-amber-200 text-amber-800 transition text-xs font-extrabold uppercase tracking-wider flex items-center gap-1 shadow-2xs"
+                title="Ekranı Anında Kilitle"
+              >
+                <Lock className="w-4 h-4 text-amber-600" />
+                <span className="hidden xl:inline">KİLİTLE</span>
+              </button>
+            </div>
 
             {/* New Declaration Button */}
             <button

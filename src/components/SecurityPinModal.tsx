@@ -5,32 +5,57 @@ import { UserSession } from '../types';
 interface SecurityPinModalProps {
   isOpen: boolean;
   session: UserSession;
+  appLockEnabled: boolean;
+  appPassword: string;
   onClose: () => void;
   onUpdateRole: (newRole: UserSession['userRole'], newName: string) => void;
+  onUpdateSecurityConfig: (enabled: boolean, newPassword: string) => void;
+  onLockAppNow: () => void;
 }
 
 export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
   isOpen,
   session,
+  appLockEnabled,
+  appPassword,
   onClose,
   onUpdateRole,
+  onUpdateSecurityConfig,
+  onLockAppNow,
 }) => {
   if (!isOpen) return null;
 
   const [selectedRole, setSelectedRole] = useState<UserSession['userRole']>(session.userRole);
   const [userName, setUserName] = useState(session.userName);
-  const [pin, setPin] = useState('');
-  const [pinError, setPinError] = useState('');
+  const [enableLock, setEnableLock] = useState(appLockEnabled);
+  const [newPass, setNewPass] = useState(appPassword || '1234');
+  const [confirmPass, setConfirmPass] = useState(appPassword || '1234');
+  const [passError, setPassError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedRole === 'ADMIN' && pin && pin !== '1234') {
-      setPinError('Hatalı Yönetici PIN Kodu! (Varsayılan PIN: 1234)');
-      return;
+    setPassError('');
+    setSuccessMsg('');
+
+    if (enableLock) {
+      if (!newPass || newPass.trim().length < 3) {
+        setPassError('Şifre en az 3 karakter veya rakam olmalıdır.');
+        return;
+      }
+      if (newPass !== confirmPass) {
+        setPassError('Girdiğiniz yeni şifreler birbiriyle eşleşmiyor.');
+        return;
+      }
     }
 
     onUpdateRole(selectedRole, userName);
-    onClose();
+    onUpdateSecurityConfig(enableLock, newPass);
+    setSuccessMsg('Güvenlik ayarları ve giriş şifresi başarıyla kaydedildi.');
+
+    setTimeout(() => {
+      onClose();
+    }, 600);
   };
 
   return (
@@ -89,31 +114,88 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
             </select>
           </div>
 
-          {selectedRole === 'ADMIN' && (
-            <div>
-              <label className="block text-slate-500 font-black text-xs uppercase tracking-wider mb-1">
-                Yönetici Doğrulama PIN Kodu (Simülasyon PIN: 1234)
+          {/* Toggle App Lock on Entry */}
+          <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-extrabold text-slate-900 uppercase text-xs flex items-center gap-1.5">
+                  <KeyRound className="w-4 h-4 text-indigo-600" />
+                  <span>SİSTEME GİRİŞTE ŞİFRE ZORUNLULUĞU</span>
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                  Uygulama her açıldığında kilit ekranının gelmesini sağlar.
+                </p>
+              </div>
+
+              <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                <input
+                  type="checkbox"
+                  checked={enableLock}
+                  onChange={(e) => setEnableLock(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
               </label>
-              <input
-                type="password"
-                maxLength={4}
-                value={pin}
-                onChange={(e) => { setPin(e.target.value); setPinError(''); }}
-                placeholder="4 Haneli PIN"
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-slate-900 font-mono font-black tracking-widest text-center focus:border-indigo-600 focus:bg-white focus:outline-none"
-              />
-              {pinError && <p className="text-red-600 text-xs mt-1 font-bold">{pinError}</p>}
+            </div>
+
+            {enableLock && (
+              <div className="pt-2 border-t border-slate-200 space-y-3 animate-in fade-in">
+                <div>
+                  <label className="block text-slate-600 font-bold text-[11px] uppercase mb-1">
+                    Yeni Sistem Giriş Şifresi / PIN
+                  </label>
+                  <input
+                    type="password"
+                    value={newPass}
+                    onChange={(e) => setNewPass(e.target.value)}
+                    placeholder="Şifrenizi giriniz..."
+                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-indigo-600 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 font-bold text-[11px] uppercase mb-1">
+                    Şifre Tekrar Onay
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPass}
+                    onChange={(e) => setConfirmPass(e.target.value)}
+                    placeholder="Şifreyi tekrar giriniz..."
+                    className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-slate-900 font-mono font-bold focus:border-indigo-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {passError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 font-bold text-xs">
+              {passError}
             </div>
           )}
 
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-slate-600 text-xs space-y-1">
-            <div className="font-black text-slate-900 uppercase tracking-wide flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              VERİ GİZLİLİĞİ GÜVENCESİ:
+          {successMsg && (
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 font-bold text-xs">
+              {successMsg}
             </div>
-            <p className="font-medium text-slate-600">
-              Gümrük beyannameleri, vergi numaraları ve banka İBKB tutarları şifrelenmiş yerel depolama ve güvenli sunucu proxysi ile korunmaktadır.
-            </p>
+          )}
+
+          <div className="p-3.5 bg-indigo-50/80 rounded-2xl border border-indigo-100 flex items-center justify-between">
+            <div className="text-[11px] text-indigo-900 font-medium">
+              Ekranı hemen kilitlemek mi istiyorsunuz?
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onLockAppNow();
+              }}
+              className="px-3 py-1.5 bg-slate-900 hover:bg-black text-white font-extrabold text-[11px] uppercase rounded-xl transition shadow-xs flex items-center gap-1 shrink-0"
+            >
+              <Lock className="w-3.5 h-3.5 text-amber-400" />
+              <span>Sert Kilitle</span>
+            </button>
           </div>
 
           {/* Footer */}
@@ -130,7 +212,7 @@ export const SecurityPinModal: React.FC<SecurityPinModalProps> = ({
               className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-indigo-100 flex items-center space-x-1.5 transition"
             >
               <UserCheck className="w-4 h-4" />
-              <span>GÜVENLİ OTURUMU GÜNCELLE</span>
+              <span>KAYDET & GÜNCELLE</span>
             </button>
           </div>
 
