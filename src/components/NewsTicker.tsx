@@ -7,6 +7,14 @@ interface NewsItem {
   isCritical: boolean;
 }
 
+
+function getValidUrl(item: NewsItem) {
+  if (!item.url || item.url === '#' || item.url === '/' || !item.url.startsWith('http')) {
+    return `https://www.google.com/search?q=${encodeURIComponent(item.text)}`;
+  }
+  return item.url;
+}
+
 export const NewsTicker: React.FC = () => {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
@@ -106,7 +114,7 @@ export const NewsTicker: React.FC = () => {
             {newsItems.map((item, idx) => (
               <div key={idx} className="flex items-center gap-6 group">
                 <a 
-                  href={item.url} 
+                  href={getValidUrl(item)} 
                   target="_blank" 
                   rel="noopener noreferrer"
                   className={`flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide transition-colors ${item.isCritical ? 'text-red-600 dark:text-red-400 hover:text-red-800' : 'text-amber-900 dark:text-amber-200 hover:text-amber-600'}`}
@@ -212,7 +220,7 @@ export const NewsTicker: React.FC = () => {
                   Anladım, Kapat
                 </button>
                 <a
-                  href={criticalNews.url}
+                  href={getValidUrl(criticalNews)}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => setIsToastVisible(false)}

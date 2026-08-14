@@ -62,7 +62,7 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
       {/* Table Top Toolbar */}
       <div className="p-3.5 sm:p-4 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex items-center space-x-2 text-xs font-black text-slate-800 uppercase tracking-wider">
-          <FileText className="w-4 h-4 text-indigo-600" />
+          <FileText className="w-3.5 h-3.5 text-indigo-600" />
           <span>BEYANNAME LİSTESİ ({declarations.length} Kayıt)</span>
         </div>
 
@@ -99,14 +99,14 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
           {/* Table Header */}
           <thead>
             <tr className="bg-slate-50/80 text-slate-400 font-black text-[11px] uppercase tracking-widest border-b border-slate-200">
-              <th className="py-3.5 px-4">Beyanname No</th>
-              <th className="py-3.5 px-4">İntaç (Kapanma) Tarihi</th>
-              <th className="py-3.5 px-4">180 Gün Yasal Süre / Kalan Gün</th>
-              <th className="py-3.5 px-4">Alıcı Firma & Ülke</th>
-              <th className="py-3.5 px-4 text-right">Toplam Tutar</th>
-              <th className="py-3.5 px-4 text-right">Açık Bakiye</th>
-              <th className="py-3.5 px-4 text-center">Durum</th>
-              <th className="py-3.5 px-4 text-center">İşlemler</th>
+              <th className="py-2 px-2">Beyanname No</th>
+              <th className="py-2 px-2 hidden lg:table-cell">İntaç (Kapanma) Tarihi</th>
+              <th className="py-2 px-2">180 Gün Yasal Süre / Kalan Gün</th>
+              <th className="py-2 px-2 hidden md:table-cell">Alıcı Firma & Ülke</th>
+              <th className="py-2 px-2 text-right hidden sm:table-cell">Toplam Tutar</th>
+              <th className="py-2 px-2 text-right">Açık Bakiye</th>
+              <th className="py-2 px-2 text-center">Durum</th>
+              <th className="py-2 px-2 text-center">İşlemler</th>
             </tr>
           </thead>
 
@@ -126,7 +126,7 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                         onClick={onLoadSampleData}
                         className="mt-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition flex items-center gap-2 shadow-md shadow-indigo-100"
                       >
-                        <RefreshCw className="w-4 h-4" />
+                        <RefreshCw className="w-3.5 h-3.5" />
                         <span>2 Adet Test Örnek Veri Yükle</span>
                       </button>
                     )}
@@ -172,7 +172,7 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                   >
                     
                     {/* Beyanname No */}
-                    <td className="py-4 px-4 font-mono font-bold text-slate-900">
+                    <td className="py-2 px-2 font-mono font-bold text-slate-900">
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => onSelectDeclaration(dec)}
@@ -192,7 +192,7 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                     </td>
 
                     {/* Intac Date */}
-                    <td className="py-4 px-4 text-slate-700 font-bold whitespace-nowrap">
+                    <td className="py-2 px-2 text-slate-700 font-bold whitespace-nowrap hidden lg:table-cell">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         <span>{formatDateTR(dec.closingDate) || 'Belirtilmedi'}</span>
@@ -203,7 +203,7 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                     </td>
 
                     {/* 180-Day Countdown Clock */}
-                    <td className="py-4 px-4 whitespace-nowrap min-w-[200px]">
+                    <td className="py-2 px-2 whitespace-nowrap min-w-[200px]">
                       <div className="flex items-center space-x-2 mb-1.5">
                         <span className={`inline-flex items-center space-x-1 text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border ${riskBadgeClass}`}>
                           {riskIcon}
@@ -244,7 +244,7 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                     </td>
 
                     {/* Importer & Country */}
-                    <td className="py-4 px-4 max-w-[180px]">
+                    <td className="py-2 px-2 max-w-[180px] hidden md:table-cell">
                       <div className="font-bold text-slate-900 truncate" title={dec.importerTitle}>
                         {dec.importerTitle}
                       </div>
@@ -254,7 +254,7 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                     </td>
 
                     {/* Total Amount */}
-                    <td className="py-4 px-4 text-right font-mono font-bold text-slate-900 text-sm whitespace-nowrap">
+                    <td className="py-2 px-2 text-right font-mono font-bold text-slate-900 text-sm whitespace-nowrap hidden sm:table-cell">
                       <div>{formatCurrency(dec.amount, dec.currency)}</div>
                       <div className="text-[10px] text-slate-400 font-sans font-bold uppercase">
                         FOB ({dec.incoterm})
@@ -262,7 +262,7 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                     </td>
 
                     {/* Open Remaining Amount */}
-                    <td className="py-4 px-4 text-right font-mono font-black text-sm whitespace-nowrap">
+                    <td className="py-2 px-2 text-right font-mono font-black text-sm whitespace-nowrap">
                       <div className={dec.remainingAmount > 0 ? 'text-amber-600' : 'text-emerald-600'}>
                         {formatCurrency(dec.remainingAmount, dec.currency)}
                       </div>
@@ -274,7 +274,7 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                     </td>
 
                     {/* Status Badge */}
-                    <td className="py-4 px-4 text-center whitespace-nowrap">
+                    <td className="py-2 px-2 text-center">
                       <span className={`inline-block text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-full border ${
                         dec.status === 'CLOSED'
                           ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
@@ -299,17 +299,17 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                     </td>
 
                     {/* Actions */}
-                    <td className="py-4 px-4 text-center whitespace-nowrap">
-                      <div className="flex items-center justify-center space-x-1.5">
+                    <td className="py-2 px-2 text-center whitespace-nowrap">
+                      <div className="flex items-center justify-center gap-1.5 flex-wrap">
                         
                         {/* Add İBKB */}
                         {dec.remainingAmount > 0 && (
                           <button
                             onClick={() => onAddIBKB(dec)}
-                            className="p-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition shadow-2xs"
+                            className="p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 transition shadow-2xs"
                             title="İBKB / DAB Kapatma Ekle"
                           >
-                            <Plus className="w-4 h-4" />
+                            <Plus className="w-3.5 h-3.5" />
                           </button>
                         )}
 
@@ -317,10 +317,10 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                         {dec.remainingAmount > 0 && !dec.hasExtension && (
                           <button
                             onClick={() => onRequestExtension(dec)}
-                            className="p-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition shadow-2xs"
+                            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition shadow-2xs"
                             title="90 Gün Ek Süre Kaydı"
                           >
-                            <Clock className="w-4 h-4" />
+                            <Clock className="w-3.5 h-3.5" />
                           </button>
                         )}
 
@@ -328,30 +328,30 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                         {dec.remainingAmount > 0 && (
                           <button
                             onClick={() => onApplyTerkin(dec)}
-                            className="p-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition shadow-2xs"
+                            className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition shadow-2xs"
                             title="30.000 USD Terkin / Muafiyet Kapatması"
                           >
-                            <Sparkles className="w-4 h-4" />
+                            <Sparkles className="w-3.5 h-3.5" />
                           </button>
                         )}
 
                         {/* Print Petition */}
                         <button
                           onClick={() => onGeneratePetition(dec)}
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition shadow-2xs"
+                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition shadow-2xs"
                           title="Banka Ek Süre Dilekçesi Yazdır"
                         >
-                          <Printer className="w-4 h-4" />
+                          <Printer className="w-3.5 h-3.5" />
                         </button>
 
                         {/* Document Management */}
                         {onOpenDocuments && (
                           <button
                             onClick={() => onOpenDocuments(dec)}
-                            className="p-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition shadow-2xs relative"
+                            className="p-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition shadow-2xs relative"
                             title="Belge Yönetimi (Gümrük PDF, Fatura, Çeki Listesi)"
                           >
-                            <FolderOpen className="w-4 h-4" />
+                            <FolderOpen className="w-3.5 h-3.5" />
                             {dec.documents && dec.documents.length > 0 && (
                               <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-indigo-600 text-white rounded-full text-[8px] font-black flex items-center justify-center">
                                 {dec.documents.length}
@@ -363,20 +363,20 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                         {/* View Details */}
                         <button
                           onClick={() => onSelectDeclaration(dec)}
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition shadow-2xs"
+                          className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition shadow-2xs"
                           title="Tüm Detayları Gör"
                         >
-                          <FileText className="w-4 h-4" />
+                          <FileText className="w-3.5 h-3.5" />
                         </button>
 
                         {/* Edit Declaration */}
                         {onEditDeclaration && (
                           <button
                             onClick={() => onEditDeclaration(dec)}
-                            className="p-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition shadow-2xs"
+                            className="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 transition shadow-2xs"
                             title="Beyanname Bilgilerini Düzenle"
                           >
-                            <Edit3 className="w-4 h-4" />
+                            <Edit3 className="w-3.5 h-3.5" />
                           </button>
                         )}
 
@@ -388,10 +388,10 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                                 onDeleteDeclaration(dec.id);
                               }
                             }}
-                            className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition shadow-2xs"
+                            className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 transition shadow-2xs"
                             title="Beyannameyi Sil"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}
 
