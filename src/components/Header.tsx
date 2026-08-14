@@ -11,15 +11,16 @@ import {
   Building2,
   FileText,
   CloudUpload,
-  Sun,
-  Moon
+  Palette,
+  ChevronDown,
+  Mail
 } from 'lucide-react';
 import { UserSession } from '../types';
 
 interface HeaderProps {
   session: UserSession;
-  isDarkMode: boolean;
-  onToggleDarkMode: () => void;
+  activeTheme: string;
+  onChangeTheme: (theme: string) => void;
   onToggleSecurity: () => void;
   onLockNow: () => void;
   onOpenNotifications: () => void;
@@ -30,14 +31,15 @@ interface HeaderProps {
   onOpenAiAssistant: () => void;
   onOpenAuditLogs: () => void;
   onOpenCloudBackup: () => void;
+  onOpenEmailReminders: () => void;
   onExportSheets: () => void;
   isExportingSheets: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   session,
-  isDarkMode,
-  onToggleDarkMode,
+  activeTheme,
+  onChangeTheme,
   onToggleSecurity,
   onLockNow,
   onOpenNotifications,
@@ -48,6 +50,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAiAssistant,
   onOpenAuditLogs,
   onOpenCloudBackup,
+  onOpenEmailReminders,
   onExportSheets,
   isExportingSheets,
 }) => {
@@ -103,14 +106,25 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Action Buttons */}
           <div className="flex items-center space-x-2">
             
-            {/* Dark Mode Toggle */}
-            <button
-              onClick={onToggleDarkMode}
-              className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 transition border border-slate-200 dark:border-slate-700 flex items-center justify-center"
-              title={isDarkMode ? 'Aydınlık Mod' : 'Koyu Mod (Dark Theme)'}
-            >
-              {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5 text-indigo-600" />}
-            </button>
+            {/* Theme Selector */}
+            <div className="relative hidden md:block">
+              <select
+                value={activeTheme}
+                onChange={(e) => onChangeTheme(e.target.value)}
+                className="appearance-none bg-slate-100 hover:bg-slate-200 text-slate-800 text-[11px] font-extrabold uppercase tracking-wider pl-8 pr-7 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer"
+              >
+                <option value="default">İndigo (Açık)</option>
+                <option value="dark">İndigo (Koyu)</option>
+                <option value="ocean">Okyanus (Açık)</option>
+                <option value="ocean-dark">Okyanus (Koyu)</option>
+                <option value="emerald">Zümrüt (Açık)</option>
+                <option value="emerald-dark">Zümrüt (Koyu)</option>
+                <option value="rose">Yakut (Açık)</option>
+                <option value="rose-dark">Yakut (Koyu)</option>
+              </select>
+              <Palette className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+              <ChevronDown className="w-3.5 h-3.5 absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+            </div>
 
             {/* Cloud Backup Button */}
             <button
@@ -124,6 +138,16 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
               <CloudUpload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span className="hidden xl:inline">BULUT YEDEK</span>
+            </button>
+
+            {/* Email Reminders Button */}
+            <button
+              onClick={onOpenEmailReminders}
+              className="flex items-center space-x-1.5 bg-sky-50 dark:bg-sky-950/80 hover:bg-sky-100 dark:hover:bg-sky-900 text-sky-700 dark:text-sky-200 text-xs font-extrabold uppercase tracking-wider px-3.5 py-2.5 rounded-xl border border-sky-200 dark:border-sky-800 transition-colors"
+              title="E-Posta Hatırlatmaları"
+            >
+              <Mail className="w-4 h-4 text-sky-600 dark:text-sky-400" />
+              <span className="hidden sm:inline">E-POSTA</span>
             </button>
 
             {/* AI Document OCR & Consultant Button */}

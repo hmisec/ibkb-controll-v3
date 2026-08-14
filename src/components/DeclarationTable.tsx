@@ -6,7 +6,8 @@ import {
 } from '../types';
 import { 
   formatCurrency, 
-  getDeadlineDateStr 
+  getDeadlineDateStr,
+  formatDateTR
 } from '../utils/exportCalculations';
 import { 
   Clock, 
@@ -24,7 +25,8 @@ import {
   Edit3,
   Trash2,
   RefreshCw,
-  Trash
+  Trash,
+  FolderOpen
 } from 'lucide-react';
 
 interface DeclarationTableProps {
@@ -34,6 +36,7 @@ interface DeclarationTableProps {
   onRequestExtension: (declaration: Declaration) => void;
   onApplyTerkin: (declaration: Declaration) => void;
   onGeneratePetition: (declaration: Declaration) => void;
+  onOpenDocuments?: (declaration: Declaration) => void;
   onEditDeclaration?: (declaration: Declaration) => void;
   onDeleteDeclaration?: (declarationId: string) => void;
   onLoadSampleData?: () => void;
@@ -47,6 +50,7 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
   onRequestExtension,
   onApplyTerkin,
   onGeneratePetition,
+  onOpenDocuments,
   onEditDeclaration,
   onDeleteDeclaration,
   onLoadSampleData,
@@ -191,10 +195,10 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                     <td className="py-4 px-4 text-slate-700 font-bold whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{dec.closingDate || 'Belirtilmedi'}</span>
+                        <span>{formatDateTR(dec.closingDate) || 'Belirtilmedi'}</span>
                       </div>
                       <div className="text-[10px] text-slate-400 font-medium mt-0.5">
-                        Tescil: {dec.registrationDate}
+                        Tescil: {formatDateTR(dec.registrationDate)}
                       </div>
                     </td>
 
@@ -339,6 +343,22 @@ export const DeclarationTable: React.FC<DeclarationTableProps> = ({
                         >
                           <Printer className="w-4 h-4" />
                         </button>
+
+                        {/* Document Management */}
+                        {onOpenDocuments && (
+                          <button
+                            onClick={() => onOpenDocuments(dec)}
+                            className="p-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 transition shadow-2xs relative"
+                            title="Belge Yönetimi (Gümrük PDF, Fatura, Çeki Listesi)"
+                          >
+                            <FolderOpen className="w-4 h-4" />
+                            {dec.documents && dec.documents.length > 0 && (
+                              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-indigo-600 text-white rounded-full text-[8px] font-black flex items-center justify-center">
+                                {dec.documents.length}
+                              </span>
+                            )}
+                          </button>
+                        )}
 
                         {/* View Details */}
                         <button

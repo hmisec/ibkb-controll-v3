@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Edit3, Building2, Calendar, FileText, Globe, AlertCircle } from 'lucide-react';
 import { Declaration, PaymentMethod, Incoterm, Currency } from '../types';
-import { validateDeclarationNumber } from '../utils/exportCalculations';
+import { validateDeclarationNumber, formatToInputDate } from '../utils/exportCalculations';
 
 interface EditDeclarationModalProps {
   isOpen: boolean;
@@ -19,8 +19,8 @@ export const EditDeclarationModal: React.FC<EditDeclarationModalProps> = ({
   if (!isOpen || !declaration) return null;
 
   const [declarationNo, setDeclarationNo] = useState(declaration.declarationNo);
-  const [registrationDate, setRegistrationDate] = useState(declaration.registrationDate);
-  const [closingDate, setClosingDate] = useState(declaration.closingDate);
+  const [registrationDate, setRegistrationDate] = useState(formatToInputDate(declaration.registrationDate));
+  const [closingDate, setClosingDate] = useState(formatToInputDate(declaration.closingDate));
   const [exporterTitle, setExporterTitle] = useState(declaration.exporterTitle || 'GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.');
   const [exporterTaxNo, setExporterTaxNo] = useState(declaration.exporterTaxNo || '3960817425');
   const [importerTitle, setImporterTitle] = useState(declaration.importerTitle);
@@ -44,8 +44,8 @@ export const EditDeclarationModal: React.FC<EditDeclarationModalProps> = ({
   useEffect(() => {
     if (declaration) {
       setDeclarationNo(declaration.declarationNo);
-      setRegistrationDate(declaration.registrationDate);
-      setClosingDate(declaration.closingDate);
+      setRegistrationDate(formatToInputDate(declaration.registrationDate));
+      setClosingDate(formatToInputDate(declaration.closingDate));
       setExporterTitle(declaration.exporterTitle || 'GLOBAL EXPORT & LOGISTICS INT. LTD. ŞTİ.');
       setExporterTaxNo(declaration.exporterTaxNo || '3960817425');
       setImporterTitle(declaration.importerTitle);

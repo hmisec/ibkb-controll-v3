@@ -17,7 +17,7 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { Declaration } from '../types';
-import { formatCurrency, getDeadlineDateStr } from '../utils/exportCalculations';
+import { formatCurrency, getDeadlineDateStr, formatDateTR } from '../utils/exportCalculations';
 
 interface PetitionGeneratorModalProps {
   isOpen: boolean;
@@ -93,9 +93,9 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
         id: 'qnb-row-1',
         declarationNo: declaration.declarationNo || '',
         invoiceNo: declaration.invoiceNo || ('FT-2026-' + Math.floor(10000 + Math.random() * 90000)),
-        declarationDate: declaration.closingDate || new Date().toISOString().substring(0, 10),
+        declarationDate: formatDateTR(declaration.closingDate) || formatDateTR(new Date()),
         declarationAmountAndCurr: `${declaration.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${declaration.currency}`,
-        creditDate: declaration.closingDate || new Date().toISOString().substring(0, 10),
+        creditDate: formatDateTR(declaration.closingDate) || formatDateTR(new Date()),
         incomingAmountAndCurr: `${declaration.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${declaration.currency}`,
         referenceNo: 'FT' + Math.floor(1000000000 + Math.random() * 9000000000),
         ibkbGbLinkAmount: `${declaration.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${declaration.currency}`,
@@ -120,7 +120,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
 
   if (!isOpen || !declaration) return null;
 
-  const todayStr = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const todayStr = formatDateTR(new Date());
   const deadlineStr = getDeadlineDateStr(declaration.closingDate, declaration.hasExtension);
 
   const handlePrint = () => {
@@ -133,9 +133,9 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
       id: newId,
       declarationNo: '2634' + Math.floor(10000000000000 + Math.random() * 90000000000000),
       invoiceNo: 'FT-2026-' + Math.floor(10000 + Math.random() * 90000),
-      declarationDate: new Date().toISOString().substring(0, 10),
+      declarationDate: formatDateTR(new Date()),
       declarationAmountAndCurr: '50.000,00 EUR',
-      creditDate: new Date().toISOString().substring(0, 10),
+      creditDate: formatDateTR(new Date()),
       incomingAmountAndCurr: '50.000,00 EUR',
       referenceNo: 'FT' + Math.floor(1000000000 + Math.random() * 9000000000),
       ibkbGbLinkAmount: '50.000,00 EUR',
@@ -816,15 +816,16 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                 {/* Footer Signatures */}
                 <div className="pt-6 font-bold space-y-4 text-xs">
                   <div>Saygılarımızla,</div>
-                  <div className="pt-8 flex justify-between items-start">
-                    <div>
-                      <div className="font-black text-sm uppercase">KAŞE / İMZA</div>
-                      <div className="text-xs font-bold text-slate-800 uppercase mt-0.5">{companyTitle}</div>
-                    </div>
-
-                    <div className="text-right">
-                      <div className="font-black text-sm uppercase">{signerName}</div>
-                      <div className="text-xs font-bold text-slate-600 uppercase mt-0.5">{signerTitle}</div>
+                  <div className="pt-4 flex justify-end">
+                    <div className="text-center min-w-[240px]">
+                      {/* İmza Sahibi Adı Soyadı (Firma Unvanının Üstünde) */}
+                      <div className="font-black text-sm uppercase text-slate-900">{signerName}</div>
+                      <div className="text-xs font-bold text-slate-600 uppercase mt-0.5 mb-2">{signerTitle}</div>
+                      
+                      {/* Firma Unvanı / Kaşe Başlığı */}
+                      <div className="text-xs font-black text-slate-900 uppercase tracking-tight">{companyTitle}</div>
+                      <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">KAŞE / İMZA</div>
+                      <div className="mt-8 border-b-2 border-black w-48 mx-auto"></div>
                     </div>
                   </div>
                 </div>
@@ -873,7 +874,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                         </tr>
                         <tr>
                           <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Fiili İntaç / Kapanış Tarihi:</td>
-                          <td className="py-2 px-3 font-bold text-slate-900">{declaration.closingDate}</td>
+                          <td className="py-2 px-3 font-bold text-slate-900">{formatDateTR(declaration.closingDate)}</td>
                         </tr>
                         <tr className="bg-slate-50">
                           <td className="py-2 px-3 font-extrabold text-slate-600 uppercase tracking-wider">Alıcı Firma & Ülke:</td>
@@ -915,7 +916,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                           <ul className="list-disc list-inside space-y-0.5 text-[11px]">
                             {declaration.ibkbRecords.map((ibkb) => (
                               <li key={ibkb.id}>
-                                <strong className="font-mono">{ibkb.ibkbNo}</strong> - {ibkb.bankName} ({ibkb.documentDate}): {formatCurrency(ibkb.amount, ibkb.currency)}
+                                <strong className="font-mono">{ibkb.ibkbNo}</strong> - {ibkb.bankName} ({formatDateTR(ibkb.documentDate)}): {formatCurrency(ibkb.amount, ibkb.currency)}
                               </li>
                             ))}
                           </ul>
@@ -965,10 +966,14 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-center font-black">
-                    <div className="uppercase font-extrabold">{companyTitle}</div>
-                    <div className="text-xs font-bold text-slate-900 uppercase tracking-wider mt-3">{signerName}</div>
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">{signerTitle}</div>
+                  <div className="text-center font-black min-w-[220px]">
+                    {/* İmza Sahibi Adı Soyadı (Firma Unvanının Üstünde) */}
+                    <div className="text-xs font-black text-slate-900 uppercase tracking-wider">{signerName}</div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 mb-2">{signerTitle}</div>
+
+                    {/* Firma Unvanı / Kaşe Başlığı */}
+                    <div className="uppercase font-extrabold text-slate-900">{companyTitle}</div>
+                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">KAŞE / İMZA</div>
                     <div className="mt-8 border-b-2 border-slate-400 w-44 mx-auto"></div>
                   </div>
                 </div>

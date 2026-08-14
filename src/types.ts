@@ -1,3 +1,24 @@
+export type DocumentCategory = 
+  | 'BEYANNAME_PDF'  // Gümrük Beyannamesi PDF
+  | 'INVOICE'        // İhracat Faturası (E-Fatura / Commercial Invoice)
+  | 'PACKING_LIST'   // Çeki Listesi (Packing List)
+  | 'SWIFT_DEKONT'   // Gelen Bedel / Swift Dekontu / İBKB
+  | 'CONSIGNMENT'    // Konşimento / Taşıma Belgesi (CMR)
+  | 'OTHER';         // Diğer Gümrük Belgesi
+
+export interface DeclarationDocument {
+  id: string;
+  declarationId: string;
+  category: DocumentCategory;
+  fileName: string;
+  fileSize: string;
+  fileType: string;
+  uploadDate: string;
+  uploadedBy?: string;
+  fileUrl?: string;
+  notes?: string;
+}
+
 export type DeclarationStatus = 
   | 'DRAFT'           // Taslak
   | 'ACTIVE'          // Aktif (Açık - İBKB Bekliyor)
@@ -77,6 +98,7 @@ export interface Declaration {
   daysLeft: number;
   notes?: string;
   attachedFilesCount?: number;
+  documents?: DeclarationDocument[];
   ibkbRecords: IBKBRecord[];
   createdAt: string;
   updatedAt: string;

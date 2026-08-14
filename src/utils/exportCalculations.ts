@@ -1,13 +1,110 @@
 import { Declaration, IBKBRecord, AuditNotification, RiskLevel, DeclarationStatus } from '../types';
 
 /**
+ * Converts any date string or Date object to Turkish format: DD.MM.YYYY
+ * e.g. "2026-08-13" -> "13.08.2026"
+ */
+export function formatDateTR(dateInput: string | Date | undefined | null): string {
+  if (!dateInput) return '';
+
+  if (dateInput instanceof Date) {
+    if (isNaN(dateInput.getTime())) return '';
+    const day = String(dateInput.getDate()).padStart(2, '0');
+    const month = String(dateInput.getMonth() + 1).padStart(2, '0');
+    const year = dateInput.getFullYear();
+    return `${day}.${month}.${year}`;
+  }
+
+  const str = String(dateInput).trim();
+  if (!str) return '';
+
+  // Already in DD.MM.YYYY format
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) {
+    return str;
+  }
+
+  // Handle YYYY-MM-DD or YYYY.MM.DD or ISO string "2026-08-13T..."
+  const cleanStr = str.split('T')[0];
+  const dashParts = cleanStr.split('-');
+  if (dashParts.length === 3 && dashParts[0].length === 4) {
+    const [year, month, day] = dashParts;
+    return `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`;
+  }
+
+  const dotParts = cleanStr.split('.');
+  if (dotParts.length === 3 && dotParts[0].length === 4) {
+    const [year, month, day] = dotParts;
+    return `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`;
+  }
+
+  // Fallback JS Date parsing
+  try {
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}.${month}.${year}`;
+    }
+  } catch (e) {}
+
+  return str;
+}
+
+/**
+ * Safely parses any date string (DD.MM.YYYY or YYYY-MM-DD or ISO) into a JavaScript Date object
+ */
+export function parseDateSafe(dateStr: string | Date | undefined | null): Date {
+  if (!dateStr) return new Date();
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? new Date() : dateStr;
+
+  const str = String(dateStr).trim();
+
+  // If DD.MM.YYYY format
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) {
+    const [day, month, year] = str.split('.').map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  // If YYYY-MM-DD or YYYY.MM.DD
+  if (/^\d{4}[-.]\d{2}[-.]\d{2}/.test(str)) {
+    const clean = str.split('T')[0];
+    const separator = clean.includes('-') ? '-' : '.';
+    const [year, month, day] = clean.split(separator).map(Number);
+    return new Date(year, month - 1, day);
+  }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? new Date() : d;
+}
+
+/**
+ * Converts a DD.MM.YYYY or ISO string to YYYY-MM-DD format suitable for <input type="date">
+ */
+export function formatToInputDate(dateStr: string | undefined | null): string {
+  if (!dateStr) return '';
+  const str = String(dateStr).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  if (/^\d{2}\.\d{2}\.\d{4}$/.test(str)) {
+    const [day, month, year] = str.split('.');
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }
+  const d = parseDateSafe(str);
+  if (isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Calculates remaining days from Fiili İhracat / Kapanma tarihi
  * Legal base: 180 days (or 270 days if +90 days extension requested)
  */
 export function calculateDaysLeft(closingDateStr: string, hasExtension: boolean = false): number {
   if (!closingDateStr) return 180;
   
-  const closingDate = new Date(closingDateStr);
+  const closingDate = parseDateSafe(closingDateStr);
   const now = new Date();
   
   // Normalize time to midnight
@@ -26,10 +123,10 @@ export function calculateDaysLeft(closingDateStr: string, hasExtension: boolean 
 
 export function getDeadlineDateStr(closingDateStr: string, hasExtension: boolean = false): string {
   if (!closingDateStr) return '';
-  const closingDate = new Date(closingDateStr);
+  const closingDate = parseDateSafe(closingDateStr);
   const daysAllowed = hasExtension ? 270 : 180;
   closingDate.setDate(closingDate.getDate() + daysAllowed);
-  return closingDate.toISOString().split('T')[0];
+  return formatDateTR(closingDate);
 }
 
 export function computeRiskLevel(daysLeft: number, status: DeclarationStatus): RiskLevel {

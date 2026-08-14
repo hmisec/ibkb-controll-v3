@@ -44,6 +44,52 @@ export const sampleDemoDeclarations: Declaration[] = [
     daysLeft: calculateDaysLeft(closing1, false),
     notes: 'Kalan 50.000,25 USD için alıcı banka havalesi beklenmektedir.',
     attachedFilesCount: 3,
+    documents: [
+      {
+        id: 'doc-101',
+        declarationId: 'dec-1',
+        category: 'BEYANNAME_PDF',
+        fileName: '24340100EX001842_Gumruk_Beyannamesi.pdf',
+        fileSize: '1.8 MB',
+        fileType: 'application/pdf',
+        uploadDate: '28.02.2026',
+        uploadedBy: 'Ahmet Yılmaz',
+        notes: 'Onaylı E-Gümrük Beyannamesi Çıktısı'
+      },
+      {
+        id: 'doc-102',
+        declarationId: 'dec-1',
+        category: 'INVOICE',
+        fileName: 'FT-2026-10293_Export_Invoice.pdf',
+        fileSize: '640 KB',
+        fileType: 'application/pdf',
+        uploadDate: '28.02.2026',
+        uploadedBy: 'Ahmet Yılmaz',
+        notes: 'Resmi E-İhracat Faturası (Berlin Trading GmbH)'
+      },
+      {
+        id: 'doc-103',
+        declarationId: 'dec-1',
+        category: 'PACKING_LIST',
+        fileName: 'Packing_List_Ceki_Listesi_2026.pdf',
+        fileSize: '420 KB',
+        fileType: 'application/pdf',
+        uploadDate: '28.02.2026',
+        uploadedBy: 'Ahmet Yılmaz',
+        notes: 'Ayrıntılı Koli & Palet Çeki Listesi'
+      },
+      {
+        id: 'doc-104',
+        declarationId: 'dec-1',
+        category: 'SWIFT_DEKONT',
+        fileName: 'IsBankasi_Swift_Dekont_70000USD.pdf',
+        fileSize: '910 KB',
+        fileType: 'application/pdf',
+        uploadDate: '15.04.2026',
+        uploadedBy: 'Ahmet Yılmaz',
+        notes: '70.000,25 USD Banka Havalesi & İBKB Dekontu'
+      }
+    ],
     ibkbRecords: [
       {
         id: 'ibkb-101',
@@ -92,6 +138,30 @@ export const sampleDemoDeclarations: Declaration[] = [
     daysLeft: calculateDaysLeft(closing2, false),
     notes: 'Tutar $30.000 USD altında olduğundan 30.000 USD Terkin İstisnasına Uygundur!',
     attachedFilesCount: 2,
+    documents: [
+      {
+        id: 'doc-201',
+        declarationId: 'dec-2',
+        category: 'BEYANNAME_PDF',
+        fileName: '24340800EX002190_Gumruk_Beyannamesi.pdf',
+        fileSize: '1.5 MB',
+        fileType: 'application/pdf',
+        uploadDate: '14.02.2026',
+        uploadedBy: 'Selin Kaya',
+        notes: 'Ambarlı Gümrük Tescilli Beyanname'
+      },
+      {
+        id: 'doc-202',
+        declarationId: 'dec-2',
+        category: 'INVOICE',
+        fileName: 'FT-2026-08812_Invoice_Orient.pdf',
+        fileSize: '510 KB',
+        fileType: 'application/pdf',
+        uploadDate: '14.02.2026',
+        uploadedBy: 'Selin Kaya',
+        notes: 'Commercial Invoice (Orient Distribution FZE)'
+      }
+    ],
     ibkbRecords: [],
     createdAt: '2026-02-14 14:20',
     updatedAt: '2026-02-15 09:00',

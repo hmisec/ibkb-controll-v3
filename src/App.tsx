@@ -5,7 +5,8 @@ import {
   AuditNotification, 
   AuditLog, 
   UserSession, 
-  SystemStats 
+  SystemStats,
+  DeclarationDocument 
 } from './types';
 import { 
   initialDeclarations, 
@@ -36,6 +37,8 @@ import { SecurityPinModal } from './components/SecurityPinModal';
 import { AppLockScreen } from './components/AppLockScreen';
 import { GoogleSheetsModal } from './components/GoogleSheetsModal';
 import { CloudBackupModal } from './components/CloudBackupModal';
+import { DocumentManagementModal } from './components/DocumentManagementModal';
+import { EmailRemindersModal } from './components/EmailRemindersModal';
 import { CriticalToastAlert } from './components/CriticalToastAlert';
 import { performCloudBackup, getStoredBackupConfig, BackupState } from './lib/cloudBackupService';
 
@@ -74,20 +77,20 @@ export default function App() {
 
   const [session, setSession] = useState<UserSession>(initialSession);
 
-  // Dark Mode State
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
-    const saved = localStorage.getItem('ibkb_dark_mode');
-    return saved !== null ? saved === 'true' : true;
+  // Theme State
+  const [activeTheme, setActiveTheme] = useState<string>(() => {
+    return localStorage.getItem('ibkb_theme') || 'default';
   });
 
   useEffect(() => {
-    if (isDarkMode) {
+    document.documentElement.setAttribute('data-theme', activeTheme);
+    localStorage.setItem('ibkb_theme', activeTheme);
+    if (activeTheme.includes('dark')) {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('ibkb_dark_mode', isDarkMode ? 'true' : 'false');
-  }, [isDarkMode]);
+  }, [activeTheme]);
 
   // App Security Lock States
   const [appLockEnabled, setAppLockEnabled] = useState<boolean>(() => {
@@ -137,6 +140,8 @@ export default function App() {
   const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false);
   const [isSheetsModalOpen, setIsSheetsModalOpen] = useState(false);
   const [isCloudBackupOpen, setIsCloudBackupOpen] = useState(false);
+  const [isDocMgmtOpen, setIsDocMgmtOpen] = useState(false);
+  const [isEmailRemindersOpen, setIsEmailRemindersOpen] = useState(false);
 
   // Selected Item for Modals
   const [selectedDeclaration, setSelectedDeclaration] = useState<Declaration | null>(null);
@@ -344,6 +349,76 @@ export default function App() {
     addAuditLog('SİSTEM', 'Tüm Kayıtlar Silindi', 'Kayıtlı tüm ihracat beyannameleri temizlendi.');
   };
 
+  const handleOpenDocMgmt = (dec: Declaration) => {
+    setSelectedDeclaration(dec);
+    setIsDocMgmtOpen(true);
+  };
+
+  const handleAddDocument = (
+    declarationId: string,
+    docData: Omit<DeclarationDocument, 'id' | 'declarationId'>
+  ) => {
+    const newDoc: DeclarationDocument = {
+      ...docData,
+      id: 'doc-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      declarationId,
+    };
+
+    setDeclarations((prev) =>
+      prev.map((dec) => {
+        if (dec.id === declarationId) {
+          const existingDocs = dec.documents || [];
+          const updatedDocs = [newDoc, ...existingDocs];
+          const updatedDec = {
+            ...dec,
+            documents: updatedDocs,
+            attachedFilesCount: updatedDocs.length,
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          };
+          if (selectedDeclaration && selectedDeclaration.id === declarationId) {
+            setSelectedDeclaration(updatedDec);
+          }
+          return updatedDec;
+        }
+        return dec;
+      })
+    );
+
+    addAuditLog(
+      docData.fileName,
+      'Gümrük Belgesi Yüklendi',
+      `"${docData.fileName}" isimli belge arşivlendi.`
+    );
+  };
+
+  const handleDeleteDocument = (declarationId: string, docId: string) => {
+    setDeclarations((prev) =>
+      prev.map((dec) => {
+        if (dec.id === declarationId) {
+          const existingDocs = dec.documents || [];
+          const updatedDocs = existingDocs.filter((d) => d.id !== docId);
+          const updatedDec = {
+            ...dec,
+            documents: updatedDocs,
+            attachedFilesCount: updatedDocs.length,
+            updatedAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          };
+          if (selectedDeclaration && selectedDeclaration.id === declarationId) {
+            setSelectedDeclaration(updatedDec);
+          }
+          return updatedDec;
+        }
+        return dec;
+      })
+    );
+
+    addAuditLog(
+      declarationId,
+      'Gümrük Belgesi Silindi',
+      `Belge gümrük arşivinden silindi.`
+    );
+  };
+
   const handleSaveIBKB = (declarationId: string, ibkbData: Omit<IBKBRecord, 'id' | 'declarationId' | 'createdAt'>) => {
     setDeclarations((prev) =>
       prev.map((dec) => {
@@ -467,8 +542,8 @@ export default function App() {
       {/* Header Bar */}
       <Header
         session={session}
-        isDarkMode={isDarkMode}
-        onToggleDarkMode={() => setIsDarkMode(!isDarkMode)}
+        activeTheme={activeTheme}
+        onChangeTheme={setActiveTheme}
         onToggleSecurity={() => setIsSecurityModalOpen(true)}
         onLockNow={() => setIsAppLocked(true)}
         onOpenNotifications={() => setIsNotifOpen(true)}
@@ -479,6 +554,7 @@ export default function App() {
         onOpenAiAssistant={() => setIsAiModalOpen(true)}
         onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
         onOpenCloudBackup={() => setIsCloudBackupOpen(true)}
+        onOpenEmailReminders={() => setIsEmailRemindersOpen(true)}
         onExportSheets={() => setIsSheetsModalOpen(true)}
         isExportingSheets={isExportingSheets}
       />
@@ -580,6 +656,7 @@ export default function App() {
           onRequestExtension={(dec) => { setSelectedDeclaration(dec); setIsExtOpen(true); }}
           onApplyTerkin={(dec) => { setSelectedDeclaration(dec); setIsTerkinOpen(true); }}
           onGeneratePetition={(dec) => { setSelectedDeclaration(dec); setIsPetitionOpen(true); }}
+          onOpenDocuments={handleOpenDocMgmt}
           onEditDeclaration={(dec) => { setSelectedDeclaration(dec); setIsEditDecOpen(true); }}
           onDeleteDeclaration={handleDeleteDeclaration}
           onLoadSampleData={handleLoadSampleData}
@@ -648,8 +725,26 @@ export default function App() {
         onRequestExtension={(dec) => { setSelectedDeclaration(dec); setIsExtOpen(true); }}
         onApplyTerkin={(dec) => { setSelectedDeclaration(dec); setIsTerkinOpen(true); }}
         onGeneratePetition={(dec) => { setSelectedDeclaration(dec); setIsPetitionOpen(true); }}
+        onOpenDocuments={handleOpenDocMgmt}
         onEditDeclaration={(dec) => { setSelectedDeclaration(dec); setIsEditDecOpen(true); }}
         onDeleteDeclaration={handleDeleteDeclaration}
+      />
+
+      {/* Document Management Modal */}
+      <DocumentManagementModal
+        isOpen={isDocMgmtOpen}
+        declaration={selectedDeclaration}
+        onClose={() => setIsDocMgmtOpen(false)}
+        onAddDocument={handleAddDocument}
+        onDeleteDocument={handleDeleteDocument}
+      />
+
+      {/* Email Reminders Modal */}
+      <EmailRemindersModal
+        isOpen={isEmailRemindersOpen}
+        onClose={() => setIsEmailRemindersOpen(false)}
+        declarations={declarations}
+        onLogAction={(title, details) => addAuditLog('KULLANICI', title, details)}
       />
 
       {/* Petition Generator Modal */}
