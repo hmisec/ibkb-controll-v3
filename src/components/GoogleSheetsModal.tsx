@@ -42,6 +42,8 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
   const [exportedUrl, setExportedUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showExportConfirm, setShowExportConfirm] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState('');
+  const [exportEndDate, setExportEndDate] = useState('');
 
   // Import State
   const [sheetInput, setSheetInput] = useState('');
@@ -93,6 +95,58 @@ export const GoogleSheetsModal: React.FC<GoogleSheetsModalProps> = ({
     setExportedUrl(null);
     setPreviewRows([]);
   };
+
+  
+  const handleDownloadCSV = () => {
+    let filtered = declarations;
+    if (exportStartDate) {
+      filtered = filtered.filter(d => new Date(d.registrationDate) >= new Date(exportStartDate));
+    }
+    if (exportEndDate) {
+      filtered = filtered.filter(d => new Date(d.registrationDate) <= new Date(exportEndDate));
+    }
+
+    const headers = [
+      'Beyanname No',
+      'Tescil Tarihi',
+      'İntaç Tarihi',
+      'İhracatçı',
+      'Alıcı',
+      'Gidilecek Ülke',
+      'Döviz Cinsi',
+      'FOB Tutar',
+      'Kapanan Tutar',
+      'Açık Tutar',
+      'Durum',
+      'Kalan Süre (Gün)'
+    ].join(',');
+
+    const rows = filtered.map(d => [
+      d.declarationNo,
+      new Date(d.registrationDate).toLocaleDateString('tr-TR'),
+      new Date(d.closingDate).toLocaleDateString('tr-TR'),
+      `"${d.exporterTitle}"`,
+      `"${d.importerTitle}"`,
+      d.destinationCountry,
+      d.currency,
+      d.amount,
+      d.closedAmount,
+      d.remainingAmount,
+      d.status,
+      d.daysLeft
+    ].join(','));
+
+    const csvContent = [headers, ...rows].join('\n');
+    const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Ihracat_Beyannameleri_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
 
   const handleTriggerExport = () => {
     if (!accessToken) {

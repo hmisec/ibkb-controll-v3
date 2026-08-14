@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import { CalendarDays,  
   ShieldAlert, 
   Bell, 
   Sparkles, 
@@ -32,6 +32,7 @@ interface HeaderProps {
   onOpenAuditLogs: () => void;
   onOpenCloudBackup: () => void;
   onOpenEmailReminders: () => void;
+  onOpenAgenda: () => void;
   onExportSheets: () => void;
   isExportingSheets: boolean;
 }
@@ -51,6 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenAuditLogs,
   onOpenCloudBackup,
   onOpenEmailReminders,
+  onOpenAgenda,
   onExportSheets,
   isExportingSheets,
 }) => {
@@ -138,6 +140,16 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
               <CloudUpload className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span className="hidden xl:inline">BULUT YEDEK</span>
+            </button>
+
+            {/* Agenda Button */}
+            <button
+              onClick={onOpenAgenda}
+              className="flex items-center space-x-1.5 bg-fuchsia-50 dark:bg-fuchsia-950/80 hover:bg-fuchsia-100 dark:hover:bg-fuchsia-900 text-fuchsia-700 dark:text-fuchsia-200 text-xs font-extrabold uppercase tracking-wider px-3.5 py-2.5 rounded-xl border border-fuchsia-200 dark:border-fuchsia-800 transition-colors"
+              title="Kapanma Süreleri Ajandası"
+            >
+              <CalendarDays className="w-4 h-4 text-fuchsia-600 dark:text-fuchsia-400" />
+              <span className="hidden sm:inline">AJANDA</span>
             </button>
 
             {/* Email Reminders Button */}

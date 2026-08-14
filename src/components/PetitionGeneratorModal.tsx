@@ -706,7 +706,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                         <th className="p-1.5 print:p-0.5 font-bold min-w-[80px] print:min-w-0 print:w-[8%]">Bedelin Hesaba Geçtiği Tarih</th>
                         <th className="p-1.5 print:p-0.5 font-bold min-w-[100px] print:min-w-0 print:w-[10%]">Gelen Bedelin Döviz Cinsi ve Tutarı</th>
                         <th className="p-1.5 print:p-0.5 font-bold min-w-[130px] print:min-w-0 print:w-[12%] whitespace-nowrap print:whitespace-normal">Gelen Bedelin Referans Numarası</th>
-                        <th className="p-1.5 print:p-0.5 font-bold min-w-[100px] print:min-w-0 print:w-[10%]">İBKB - GB Bağlantı Tutarı - EUR</th>
+                        <th className="p-1.5 print:p-0.5 font-bold min-w-[100px] print:min-w-0 print:w-[10%]">İBKB - GB Bağlantı Tutarı</th>
                         <th className="p-1.5 print:p-0.5 font-bold min-w-[110px] print:min-w-0 print:w-[8%]">Döviz Hesap Numarası</th>
                         <th className="p-1.5 print:p-0.5 font-bold min-w-[110px] print:min-w-0 print:w-[8%]">TL Hesap Numarası</th>
                       </tr>

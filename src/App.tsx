@@ -39,6 +39,8 @@ import { GoogleSheetsModal } from './components/GoogleSheetsModal';
 import { CloudBackupModal } from './components/CloudBackupModal';
 import { DocumentManagementModal } from './components/DocumentManagementModal';
 import { EmailRemindersModal } from './components/EmailRemindersModal';
+import { AgendaModal } from './components/AgendaModal';
+import { NewsTicker } from './components/NewsTicker';
 import { CriticalToastAlert } from './components/CriticalToastAlert';
 import { performCloudBackup, getStoredBackupConfig, BackupState } from './lib/cloudBackupService';
 
@@ -142,6 +144,7 @@ export default function App() {
   const [isCloudBackupOpen, setIsCloudBackupOpen] = useState(false);
   const [isDocMgmtOpen, setIsDocMgmtOpen] = useState(false);
   const [isEmailRemindersOpen, setIsEmailRemindersOpen] = useState(false);
+  const [isAgendaOpen, setIsAgendaOpen] = useState(false);
 
   // Selected Item for Modals
   const [selectedDeclaration, setSelectedDeclaration] = useState<Declaration | null>(null);
@@ -539,6 +542,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-indigo-600 selection:text-white transition-colors duration-200">
       
+      {/* Legislation News Ticker */}
+      <NewsTicker />
+
       {/* Header Bar */}
       <Header
         session={session}
@@ -555,6 +561,7 @@ export default function App() {
         onOpenAuditLogs={() => setIsAuditLogsOpen(true)}
         onOpenCloudBackup={() => setIsCloudBackupOpen(true)}
         onOpenEmailReminders={() => setIsEmailRemindersOpen(true)}
+        onOpenAgenda={() => setIsAgendaOpen(true)}
         onExportSheets={() => setIsSheetsModalOpen(true)}
         isExportingSheets={isExportingSheets}
       />
@@ -737,6 +744,13 @@ export default function App() {
         onClose={() => setIsDocMgmtOpen(false)}
         onAddDocument={handleAddDocument}
         onDeleteDocument={handleDeleteDocument}
+      />
+
+      {/* Agenda Modal */}
+      <AgendaModal
+        isOpen={isAgendaOpen}
+        onClose={() => setIsAgendaOpen(false)}
+        declarations={declarations}
       />
 
       {/* Email Reminders Modal */}
