@@ -1,4 +1,8 @@
-import React, { useState } from 'react';
+const fs = require('fs');
+let content = fs.readFileSync('src/components/EmailRemindersModal.tsx', 'utf8');
+
+// We will rewrite EmailRemindersModal completely to support Tabs and Bulk Actions
+const newModalCode = `import React, { useState } from 'react';
 import { X, Mail, Send, CheckCircle2, AlertCircle, Clock, Copy, Layers, ListChecks } from 'lucide-react';
 import { Declaration } from '../types';
 
@@ -40,68 +44,68 @@ export const EmailRemindersModal: React.FC<EmailRemindersModalProps> = ({
     setTimeout(() => setCopiedId(null), 2000);
     
     if (onLogAction && selectedDec) {
-      onLogAction('E-Posta Taslağı Kopyalandı', `${selectedDec.declarationNo} numaralı beyanname için hatırlatma metni kopyalandı.`);
+      onLogAction('E-Posta Taslağı Kopyalandı', \`\${selectedDec.declarationNo} numaralı beyanname için hatırlatma metni kopyalandı.\`);
     }
   };
 
   const getEmailSubject = (dec: Declaration) => {
     if (activeTab === 'PARTIAL') {
-      return `ÖDEME HATIRLATMASI: Kısmi Kalan Bakiye - GB No: ${dec.declarationNo}`;
+      return \`ÖDEME HATIRLATMASI: Kısmi Kalan Bakiye - GB No: \${dec.declarationNo}\`;
     }
-    return `ÖNEMLİ: İhracat Bedeli Yurda Getirme Süresi Hatırlatması - GB No: ${dec.declarationNo}`;
+    return \`ÖNEMLİ: İhracat Bedeli Yurda Getirme Süresi Hatırlatması - GB No: \${dec.declarationNo}\`;
   };
 
   const getEmailBody = (dec: Declaration) => {
     if (activeTab === 'PARTIAL') {
-      return `Sayın Finans Yetkilisi,
+      return \`Sayın Finans Yetkilisi,
 
-${dec.exporterTitle} firması adına gerçekleştirilen ihracat işlemlerinize istinaden, ${dec.declarationNo} referans numaralı gümrük beyannamesine ait ödemenizin kısmi olarak (İBKB ile) kapatıldığı tespit edilmiştir.
+\${dec.exporterTitle} firması adına gerçekleştirilen ihracat işlemlerinize istinaden, \${dec.declarationNo} referans numaralı gümrük beyannamesine ait ödemenizin kısmi olarak (İBKB ile) kapatıldığı tespit edilmiştir.
 
 İlgili gümrük beyannamesi için finansal özet aşağıdadır:
 --------------------------------------------------
-Beyanname No: ${dec.declarationNo}
-Tescil Tarihi: ${new Date(dec.registrationDate).toLocaleDateString('tr-TR')}
-Toplam FOB Tutar: ${dec.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${dec.currency}
-Kapatılan Tutar: ${dec.closedAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${dec.currency}
-Kalan Açık Bakiye: ${dec.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${dec.currency}
+Beyanname No: \${dec.declarationNo}
+Tescil Tarihi: \${new Date(dec.registrationDate).toLocaleDateString('tr-TR')}
+Toplam FOB Tutar: \${dec.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} \${dec.currency}
+Kapatılan Tutar: \${dec.closedAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} \${dec.currency}
+Kalan Açık Bakiye: \${dec.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} \${dec.currency}
 --------------------------------------------------
 
-Kalan açık bakiyenin (${dec.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${dec.currency}) mevzuat süreleri dahilinde ödenerek hesabımıza transfer edilmesi ve banka kapatmasının (İBKB/DAB) tamamlanması gerekmektedir. 
+Kalan açık bakiyenin (\${dec.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} \${dec.currency}) mevzuat süreleri dahilinde ödenerek hesabımıza transfer edilmesi ve banka kapatmasının (İBKB/DAB) tamamlanması gerekmektedir. 
 
 Ödemeyi planladığınız tarih ile ilgili veya ödeme gerçekleştiyse dekont kopyasını tarafımızla paylaşmanızı rica ederiz.
 
 Saygılarımızla,
-Dış Ticaret Operasyon / Finans Departmanı`;
+Dış Ticaret Operasyon / Finans Departmanı\`;
     }
 
-    return `Sayın Yetkili,
+    return \`Sayın Yetkili,
 
-${dec.exporterTitle} firması adına tescil edilen ihracat işlemlerinize istinaden sistemimizde yapılan kontrolde, aşağıda detayları bulunan gümrük beyannamesinin İBKB (İhracat Bedeli Kabul Belgesi) kapatma süresinin yaklaştığı/dolduğu tespit edilmiştir.
+\${dec.exporterTitle} firması adına tescil edilen ihracat işlemlerinize istinaden sistemimizde yapılan kontrolde, aşağıda detayları bulunan gümrük beyannamesinin İBKB (İhracat Bedeli Kabul Belgesi) kapatma süresinin yaklaştığı/dolduğu tespit edilmiştir.
 
 Gümrük Beyannamesi Detayları:
 --------------------------------------------------
-Beyanname No: ${dec.declarationNo}
-Tescil Tarihi: ${new Date(dec.registrationDate).toLocaleDateString('tr-TR')}
-Kapanma (İntaç) Tarihi: ${new Date(dec.closingDate).toLocaleDateString('tr-TR')}
-FOB Tutar: ${dec.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${dec.currency}
-Açık Tutar: ${dec.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ${dec.currency}
-Yasal Süre Bitiş Tarihi: ${new Date(dec.deadlineDate).toLocaleDateString('tr-TR')}
-Kalan Süre: ${dec.daysLeft < 0 ? 'SÜRE AŞIMI (' + Math.abs(dec.daysLeft) + ' Gün Geçti)' : dec.daysLeft + ' Gün'}
+Beyanname No: \${dec.declarationNo}
+Tescil Tarihi: \${new Date(dec.registrationDate).toLocaleDateString('tr-TR')}
+Kapanma (İntaç) Tarihi: \${new Date(dec.closingDate).toLocaleDateString('tr-TR')}
+FOB Tutar: \${dec.amount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} \${dec.currency}
+Açık Tutar: \${dec.remainingAmount.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} \${dec.currency}
+Yasal Süre Bitiş Tarihi: \${new Date(dec.deadlineDate).toLocaleDateString('tr-TR')}
+Kalan Süre: \${dec.daysLeft < 0 ? 'SÜRE AŞIMI (' + Math.abs(dec.daysLeft) + ' Gün Geçti)' : dec.daysLeft + ' Gün'}
 --------------------------------------------------
 
 İlgili ihracat bedelinin yasal süresi içerisinde yurda getirilerek İBKB'ye bağlanması, Kambiyo Mevzuatı açısından yasal bir zorunluluktur. Konu ile ilgili banka transfer veya İBKB belgeniz mevcut ise tarafımıza ivedilikle iletmenizi rica ederiz. 
 
 Saygılarımızla,
-Dış Ticaret Operasyon / Finans Departmanı`;
+Dış Ticaret Operasyon / Finans Departmanı\`;
   };
 
   const handleSendMailto = (dec: Declaration) => {
     const subject = encodeURIComponent(getEmailSubject(dec));
     const body = encodeURIComponent(getEmailBody(dec));
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    window.location.href = \`mailto:?subject=\${subject}&body=\${body}\`;
     
     if (onLogAction) {
-      onLogAction('E-Posta İstemcisi Açıldı', `${dec.declarationNo} numaralı beyanname için e-posta istemcisi tetiklendi.`);
+      onLogAction('E-Posta İstemcisi Açıldı', \`\${dec.declarationNo} numaralı beyanname için e-posta istemcisi tetiklendi.\`);
     }
   };
 
@@ -109,9 +113,9 @@ Dış Ticaret Operasyon / Finans Departmanı`;
     setIsBulkSending(true);
     setTimeout(() => {
       setIsBulkSending(false);
-      alert(`Başarılı: ${partialDeclarations.length} adet 'Kısmi Bakiye' ödeme hatırlatma e-postası ilgili finans departmanlarına toplu olarak gönderildi.`);
+      alert(\`Başarılı: \${partialDeclarations.length} adet 'Kısmi Bakiye' ödeme hatırlatma e-postası ilgili finans departmanlarına toplu olarak gönderildi.\`);
       if (onLogAction) {
-        onLogAction('Toplu E-Posta Gönderimi', `Kısmi durumdaki ${partialDeclarations.length} beyanname için toplu ödeme hatırlatması gönderildi.`);
+        onLogAction('Toplu E-Posta Gönderimi', \`Kısmi durumdaki \${partialDeclarations.length} beyanname için toplu ödeme hatırlatması gönderildi.\`);
       }
     }, 1500);
   };
@@ -143,22 +147,22 @@ Dış Ticaret Operasyon / Finans Departmanı`;
         <div className="flex border-b border-slate-200 dark:border-slate-800 px-6 pt-2 gap-4 bg-slate-50 dark:bg-slate-900/50">
           <button
             onClick={() => { setActiveTab('DEADLINE'); setSelectedDecId(null); }}
-            className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+            className={\`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 \${
               activeTab === 'DEADLINE' 
                 ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400' 
                 : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-            }`}
+            }\`}
           >
             <Clock className="w-4 h-4" />
             Yasal Süre Hatırlatmaları ({dueDeclarations.length})
           </button>
           <button
             onClick={() => { setActiveTab('PARTIAL'); setSelectedDecId(null); }}
-            className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${
+            className={\`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 \${
               activeTab === 'PARTIAL' 
                 ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 dark:border-indigo-400' 
                 : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-            }`}
+            }\`}
           >
             <ListChecks className="w-4 h-4" />
             Kısmi (PARTIAL) Ödeme Hatırlatmaları ({partialDeclarations.length})
@@ -199,23 +203,23 @@ Dış Ticaret Operasyon / Finans Departmanı`;
                   <button
                     key={dec.id}
                     onClick={() => setSelectedDecId(dec.id)}
-                    className={`w-full text-left p-3 rounded-xl transition flex flex-col gap-2 ${
+                    className={\`w-full text-left p-3 rounded-xl transition flex flex-col gap-2 \${
                       (selectedDecId === dec.id || (!selectedDecId && selectedDec?.id === dec.id))
                         ? 'bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-200 dark:border-indigo-800'
                         : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-700'
-                    }`}
+                    }\`}
                   >
                     <div className="flex justify-between items-start">
                       <span className="font-semibold text-sm text-slate-800 dark:text-slate-200 font-mono">
                         {dec.declarationNo.substring(0, 8)}...
                       </span>
                       {activeTab === 'DEADLINE' ? (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                        <span className={\`text-[10px] font-bold px-2 py-0.5 rounded-md \${
                           dec.daysLeft < 0 ? 'bg-red-100 text-red-700' :
                           dec.daysLeft <= 15 ? 'bg-orange-100 text-orange-700' :
                           'bg-amber-100 text-amber-700'
-                        }`}>
-                          {dec.daysLeft < 0 ? 'SÜRE AŞIMI' : `${dec.daysLeft} GÜN`}
+                        }\`}>
+                          {dec.daysLeft < 0 ? 'SÜRE AŞIMI' : \`\${dec.daysLeft} GÜN\`}
                         </span>
                       ) : (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-100 text-blue-800">
@@ -328,3 +332,7 @@ Dış Ticaret Operasyon / Finans Departmanı`;
     </div>
   );
 };
+`;
+
+fs.writeFileSync('src/components/EmailRemindersModal.tsx', newModalCode);
+console.log('EmailRemindersModal patched');

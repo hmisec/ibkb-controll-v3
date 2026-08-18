@@ -13,7 +13,7 @@ export interface BackupState {
 
 export interface CloudBackupConfig {
   autoBackupEnabled: boolean;
-  target: 'firebase' | 'google_drive' | 'both';
+  target: 'firebase' | 'google_drive' | 'both' | 'dropbox' | 'syncthing';
   lastBackupTime: string | null;
   status: 'idle' | 'syncing' | 'success' | 'error';
   lastError: string | null;

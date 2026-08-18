@@ -35,12 +35,12 @@ import { AiAssistantModal } from './components/AiAssistantModal';
 import { AuditLogModal } from './components/AuditLogModal';
 import { SecurityPinModal } from './components/SecurityPinModal';
 import { AppLockScreen } from './components/AppLockScreen';
-import { GoogleSheetsModal } from './components/GoogleSheetsModal';
+import { ExportModal } from './components/ExportModal';
 import { CloudBackupModal } from './components/CloudBackupModal';
 import { DocumentManagementModal } from './components/DocumentManagementModal';
 import { EmailRemindersModal } from './components/EmailRemindersModal';
 import { AgendaModal } from './components/AgendaModal';
-import { NewsTicker } from './components/NewsTicker';
+
 import { CriticalToastAlert } from './components/CriticalToastAlert';
 import { performCloudBackup, getStoredBackupConfig, BackupState } from './lib/cloudBackupService';
 
@@ -543,7 +543,7 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-indigo-600 selection:text-white transition-colors duration-200">
       
       {/* Legislation News Ticker */}
-      <NewsTicker />
+      
 
       {/* Header Bar */}
       <Header
@@ -808,11 +808,11 @@ export default function App() {
       )}
 
       {/* Google Sheets Modal */}
-      <GoogleSheetsModal
+      <ExportModal
         isOpen={isSheetsModalOpen}
         onClose={() => setIsSheetsModalOpen(false)}
         declarations={updatedDeclarations}
-        onImportDeclarations={handleImportDeclarations}
+        
       />
 
       {/* Automatic Cloud Backup & Sync Modal */}

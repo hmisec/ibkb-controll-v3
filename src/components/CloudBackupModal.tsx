@@ -277,8 +277,8 @@ export const CloudBackupModal: React.FC<CloudBackupModalProps> = ({
             <label className="text-xs font-black text-slate-800 uppercase tracking-wider block">
               Yedekleme Hedefi Seçimi
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               <button
                 type="button"
                 onClick={() => handleSelectTarget('firebase')}
@@ -293,7 +293,7 @@ export const CloudBackupModal: React.FC<CloudBackupModalProps> = ({
                   {config.target === 'firebase' && <Check className="w-4 h-4 text-indigo-600" />}
                 </div>
                 <div>
-                  <div className="text-xs font-black">Firebase Firestore</div>
+                  <div className="text-xs font-black">Firebase</div>
                   <div className="text-[10px] text-slate-500 font-medium">Bulut Veritabanı</div>
                 </div>
               </button>
@@ -319,8 +319,46 @@ export const CloudBackupModal: React.FC<CloudBackupModalProps> = ({
 
               <button
                 type="button"
-                onClick={() => handleSelectTarget('both')}
+                onClick={() => handleSelectTarget('dropbox')}
                 className={`p-3 rounded-xl border text-left transition flex flex-col justify-between space-y-2 ${
+                  config.target === 'dropbox'
+                    ? 'bg-indigo-50/80 border-indigo-500 text-indigo-900 ring-2 ring-indigo-500/20'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <Cloud className="w-5 h-5 text-blue-600" />
+                  {config.target === 'dropbox' && <Check className="w-4 h-4 text-indigo-600" />}
+                </div>
+                <div>
+                  <div className="text-xs font-black">Dropbox</div>
+                  <div className="text-[10px] text-slate-500 font-medium">Otomatik Senkron</div>
+                </div>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => handleSelectTarget('syncthing')}
+                className={`p-3 rounded-xl border text-left transition flex flex-col justify-between space-y-2 ${
+                  config.target === 'syncthing'
+                    ? 'bg-indigo-50/80 border-indigo-500 text-indigo-900 ring-2 ring-indigo-500/20'
+                    : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <RefreshCw className="w-5 h-5 text-purple-600" />
+                  {config.target === 'syncthing' && <Check className="w-4 h-4 text-indigo-600" />}
+                </div>
+                <div>
+                  <div className="text-xs font-black">Syncthing</div>
+                  <div className="text-[10px] text-slate-500 font-medium">P2P Klasör Yedeği</div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleSelectTarget('both')}
+                className={`col-span-2 sm:col-span-2 p-3 rounded-xl border text-left transition flex flex-col justify-between space-y-2 ${
                   config.target === 'both'
                     ? 'bg-indigo-50/80 border-indigo-500 text-indigo-900 ring-2 ring-indigo-500/20'
                     : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
@@ -331,15 +369,12 @@ export const CloudBackupModal: React.FC<CloudBackupModalProps> = ({
                   {config.target === 'both' && <Check className="w-4 h-4 text-indigo-600" />}
                 </div>
                 <div>
-                  <div className="text-xs font-black">Her İkisi de (Çift)</div>
+                  <div className="text-xs font-black">Tümü (Hibrit)</div>
                   <div className="text-[10px] text-slate-500 font-medium">Maksimum Güvenlik</div>
                 </div>
               </button>
-
             </div>
-          </div>
-
-          {/* Connected Cloud Services Cards */}
+\n          </div>\n\n          {/* Connected Cloud Services Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             
             {/* Firebase Card */}

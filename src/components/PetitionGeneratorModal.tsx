@@ -816,8 +816,8 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                 {/* Footer Signatures */}
                 <div className="pt-6 font-bold space-y-4 text-xs">
                   <div>Saygılarımızla,</div>
-                  <div className="pt-4 flex justify-end">
-                    <div className="text-center min-w-[240px]">
+                  <div className="pt-4 flex justify-start">
+                    <div className="text-left min-w-[240px]">
                       {/* İmza Sahibi Adı Soyadı (Firma Unvanının Üstünde) */}
                       <div className="font-black text-sm uppercase text-slate-900">{signerName}</div>
                       <div className="text-xs font-bold text-slate-600 uppercase mt-0.5 mb-2">{signerTitle}</div>
@@ -825,7 +825,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                       {/* Firma Unvanı / Kaşe Başlığı */}
                       <div className="text-xs font-black text-slate-900 uppercase tracking-tight">{companyTitle}</div>
                       <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">KAŞE / İMZA</div>
-                      <div className="mt-8 border-b-2 border-black w-48 mx-auto"></div>
+                      <div className="mt-8 border-b-2 border-black w-48 mx-0"></div>
                     </div>
                   </div>
                 </div>
@@ -954,7 +954,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                 </div>
 
                 {/* Signatures */}
-                <div className="mt-12 flex justify-between font-sans text-xs">
+                <div className="mt-12 flex flex-col justify-start gap-8 font-sans text-xs">
                   <div className="text-left">
                     <div className="font-extrabold text-slate-700 uppercase tracking-wider">Ekler:</div>
                     <div className="text-[10px] text-slate-600 font-bold mt-1">
@@ -966,7 +966,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-center font-black min-w-[220px]">
+                  <div className="text-left font-black min-w-[220px]">
                     {/* İmza Sahibi Adı Soyadı (Firma Unvanının Üstünde) */}
                     <div className="text-xs font-black text-slate-900 uppercase tracking-wider">{signerName}</div>
                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5 mb-2">{signerTitle}</div>
@@ -974,7 +974,7 @@ export const PetitionGeneratorModal: React.FC<PetitionGeneratorModalProps> = ({
                     {/* Firma Unvanı / Kaşe Başlığı */}
                     <div className="uppercase font-extrabold text-slate-900">{companyTitle}</div>
                     <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">KAŞE / İMZA</div>
-                    <div className="mt-8 border-b-2 border-slate-400 w-44 mx-auto"></div>
+                    <div className="mt-8 border-b-2 border-slate-400 w-44 mx-0"></div>
                   </div>
                 </div>
 
